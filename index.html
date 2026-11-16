@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DigiHealth — MVP demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--teal:#0E6B6B;--teal-d:#0A5252;--teal-l:#DDEEEC;--teal-xl:#F0F7F6;--coral:#B5482F;--coral-l:#F7E4DE;--amber:#96630F;--amber-l:#FBF0DB;--green:#2F7D4F;--green-l:#E2F2E8;--sand:#F3EFE9;--ink:#1F2226;--mute:#5F646B;--line:#DDD7CD;--bg:#FAF8F5;--r:14px}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;font-size:16px;line-height:1.45}
+button{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--ink);padding:10px 16px;min-height:44px}
+button:hover{border-color:#bdb4a6}
+button.pri{background:var(--teal);border-color:var(--teal);color:#fff;font-weight:600}
+button.pri:hover{background:var(--teal-d)}
+button.warn{border-color:var(--coral);color:var(--coral)}
+button.link{border:none;background:none;color:var(--teal);padding:4px 6px;min-height:0;text-decoration:underline}
+button:disabled{opacity:.45;cursor:not-allowed}
+select,input,textarea{font:inherit;border:1px solid #bdb4a6;border-radius:10px;padding:10px 12px;background:#fff;color:var(--ink);min-height:44px}
+textarea{width:100%;min-height:70px}
+h1,h2,h3{margin:0;line-height:1.25} h2{font-size:23px} h3{font-size:18px}
+.muted{color:var(--mute)} .small{font-size:14px} .tiny{font-size:12.5px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.spread{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--r);box-shadow:0 1px 2px rgba(0,0,0,.05),0 4px 14px rgba(0,0,0,.04)}
+.pad{padding:18px}
+.chip{display:inline-flex;align-items:center;border-radius:999px;padding:3px 11px;font-size:13px;font-weight:600;white-space:nowrap}
+.c-teal{background:var(--teal-l);color:var(--teal)}.c-coral{background:var(--coral-l);color:var(--coral)}.c-amber{background:var(--amber-l);color:var(--amber)}.c-green{background:var(--green-l);color:var(--green)}.c-grey{background:#ECE9E4;color:#4d5157}
+.label{font-size:12.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--mute);margin:20px 0 8px}
+.wrap{max-width:1240px;margin:0 auto;padding:0 18px}
+header{position:sticky;top:0;z-index:20;background:#fff;border-bottom:1px solid var(--line)}
+.hbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 18px;max-width:1240px;margin:0 auto}
+.logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:19px;color:var(--teal)}
+.logo .dot{width:28px;height:28px;border-radius:8px;background:var(--teal);display:grid;place-items:center;color:#fff}
+.sim{font-size:12px;font-weight:600;color:var(--amber);background:var(--amber-l);border-radius:6px;padding:3px 8px}
+.date{font-weight:600;background:var(--sand);border-radius:8px;padding:8px 12px}
+.rolebar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:8px 18px;max-width:1240px;margin:0 auto;border-top:1px solid var(--line)}
+.rolebtn{padding:6px 12px;min-height:40px;border-radius:999px;font-size:14px}
+.rolebtn.on{background:var(--teal);border-color:var(--teal);color:#fff;font-weight:600}
+.layout{display:grid;grid-template-columns:210px minmax(0,1fr);gap:18px;margin-top:14px}
+@media (max-width:900px){.layout{grid-template-columns:1fr}.side{display:flex;flex-wrap:wrap;gap:6px}}
+.side button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:none;background:transparent;margin-bottom:4px;position:relative}
+.side button.on{background:var(--teal-l);color:var(--teal);font-weight:700}
+.side button i{font-style:normal;margin-left:auto;background:var(--coral);color:#fff;border-radius:999px;font-size:12px;padding:0 7px;line-height:20px}
+.bcard{display:flex;gap:16px;align-items:center;background:var(--teal);color:#fff;border-radius:var(--r);padding:14px 18px;flex-wrap:wrap;margin-top:14px}
+.bcard.done{background:var(--green)}.bcard.free{background:#565c63}
+.bcard .who{background:rgba(255,255,255,.16);border-radius:10px;padding:8px 12px;text-align:center;min-width:120px}
+.bcard .who b{display:block;font-size:19px}.bcard .who span{font-size:12.5px}
+.bcard .txt{flex:1;min-width:260px}
+.bcard .t0{font-size:13.5px;background:rgba(255,255,255,.15);border-radius:8px;padding:5px 10px;margin-bottom:7px}
+.bcard .t1{font-size:12.5px;font-weight:600;opacity:.9;letter-spacing:.04em;text-transform:uppercase}
+.bcard .t2{font-size:19px;font-weight:700;margin:1px 0}.bcard .t3{font-size:15.5px}
+.bcard button.go{background:#fff;color:var(--teal);border:none;font-weight:700}
+.pulse{outline:4px solid var(--coral)!important;outline-offset:3px;animation:pl 1.4s infinite;position:relative;z-index:2}
+@keyframes pl{0%{box-shadow:0 0 0 0 rgba(181,72,47,.55)}70%{box-shadow:0 0 0 12px rgba(181,72,47,0)}100%{box-shadow:0 0 0 0 rgba(181,72,47,0)}}
+.vh{margin-bottom:14px}.vh p{margin:4px 0 0}
+.grid2{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:1000px){.grid2{grid-template-columns:1fr}}
+.item{display:flex;align-items:center;gap:12px;padding:13px 16px;border-top:1px solid var(--line);flex-wrap:wrap}
+.item:first-child{border-top:none}.item.click{cursor:pointer}.item.click:hover{background:#FBFAF8}.item.sel{background:var(--teal-xl)}
+.grow{flex:1;min-width:0}
+.kv{display:grid;grid-template-columns:170px 1fr;gap:6px 12px;font-size:15px}
+.kv>div:nth-child(odd){color:var(--mute)}
+@media (max-width:600px){.kv{grid-template-columns:1fr}}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:700px){.form{grid-template-columns:1fr}}
+.form label,.fl{display:block;font-weight:600;font-size:14.5px;margin-bottom:4px}
+.form input,.form select{width:100%}
+.req{color:var(--coral)}
+.box{border-radius:12px;padding:12px 14px;margin-top:12px}
+.b-coral{background:var(--coral-l);border:1px solid var(--coral)}.b-amber{background:var(--amber-l);border:1px solid #d8b56a}.b-teal{background:var(--teal-xl);border:1px solid var(--teal-l)}.b-green{background:var(--green-l);border:1px solid #9ccdb0}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:11px 13px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;cursor:pointer}
+.opt.on{border-color:var(--teal);background:var(--teal-xl)}
+.opt input{min-height:0;margin-top:4px;width:18px;height:18px}
+.tl{margin:6px 0 0 6px;padding-left:16px;border-left:2px solid var(--line)}
+.tl .ev{position:relative;padding:0 0 11px;font-size:15px}
+.tl .ev:before{content:"";position:absolute;left:-22px;top:6px;width:10px;height:10px;border-radius:50%;background:var(--teal)}
+.tl .ev.coral:before{background:var(--coral)}.tl .ev.amber:before{background:var(--amber)}.tl .ev.green:before{background:var(--green)}
+.tl small{color:var(--mute);display:block;font-size:12.5px}
+.range{position:relative;height:10px;border-radius:5px;background:var(--coral-l);margin:28px 0 22px}
+.range .ok{position:absolute;top:0;bottom:0;background:#BFE3CB;border-radius:5px}
+.range .mk{position:absolute;top:-5px;width:4px;height:20px;border-radius:2px;background:var(--ink);transform:translateX(-2px)}
+.range .mk b{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);font-size:13px;white-space:nowrap}
+.range .lg{position:absolute;top:13px;font-size:11.5px;color:var(--green);white-space:nowrap}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.fchip{border-radius:999px;padding:6px 12px;min-height:36px;font-size:14px}
+.fchip.on{background:var(--teal);color:#fff;border-color:var(--teal)}
+.chat{background:#ECE5DD;border-radius:12px;padding:12px;max-height:380px;overflow:auto;display:flex;flex-direction:column;gap:8px}
+.bub{background:#fff;border-radius:10px;padding:8px 11px;max-width:86%;font-size:15px;white-space:pre-wrap;box-shadow:0 1px 0 rgba(0,0,0,.08)}
+.bub.in{align-self:flex-end;background:#DCF8C6}
+.bub .alt{display:block;font-size:12.5px;color:var(--mute);border-top:1px dashed #ccc;margin-top:5px;padding-top:4px;direction:ltr;text-align:left;font-family:Inter,sans-serif}
+.bub .st{display:block;font-size:11.5px;color:#777;margin-top:3px;direction:ltr;text-align:right;font-family:Inter,sans-serif}
+.bub .st.fail{color:var(--coral);font-weight:700}
+.rtl{direction:rtl;text-align:right;font-family:"Noto Naskh Arabic",Inter,serif}
+.daysep{align-self:center;background:#E1F3FB;color:#46616e;border-radius:8px;font-size:12px;padding:2px 9px}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th{text-align:left;font-size:12.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--mute);padding:9px 10px;border-bottom:1px solid var(--line)}
+td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top}
+tr.click{cursor:pointer}tr.click:hover td{background:#FBFAF8}
+.empty{padding:26px;text-align:center;color:var(--mute)}
+.modal-bg{position:fixed;inset:0;background:rgba(20,24,28,.45);display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
+.modal-bg.on{display:flex}
+.modal{background:#fff;border-radius:16px;max-width:560px;width:100%;max-height:90vh;overflow:auto;padding:22px}
+.slot{display:block;width:100%;text-align:left;margin-bottom:8px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1F2226;color:#fff;padding:12px 18px;border-radius:10px;font-size:15px;z-index:60;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw}
+.toast.on{opacity:1}
+.hero{max-width:980px;margin:0 auto;padding:44px 22px 30px}
+.hero h1{font-size:40px;line-height:1.15;color:var(--ink);max-width:760px;margin-top:22px}
+.lead{font-size:19px;color:#3b4046;max-width:700px;margin:14px 0 0}
+.how{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+@media (max-width:900px){.how{grid-template-columns:1fr 1fr}.hero h1{font-size:30px}}
+@media (max-width:520px){.how{grid-template-columns:1fr}}
+.how .card{padding:18px}.how .n{width:30px;height:30px;border-radius:50%;background:var(--teal);color:#fff;display:grid;place-items:center;font-weight:700;margin-bottom:10px}
+.how b{display:block;font-size:17px;margin-bottom:4px}
+.team{display:flex;gap:10px;flex-wrap:wrap}.team>div{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 14px;flex:1;min-width:170px}
+.team span{font-size:24px;display:block}
+.strip{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px;align-items:center}
+.strip .sg{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:5px 12px 5px 6px;font-size:13.5px;color:var(--mute)}
+.strip .sg i{font-style:normal;width:22px;height:22px;border-radius:50%;background:#ECE9E4;display:grid;place-items:center;font-size:12px;font-weight:700}
+.strip .sg.done{color:var(--green)}.strip .sg.done i{background:var(--green-l)}
+.strip .sg.now{background:var(--teal);border-color:var(--teal);color:#fff;font-weight:700}.strip .sg.now i{background:#fff;color:var(--teal)}
+.strip .who2{font-weight:400;opacity:.85}
+.handoff{max-width:640px;margin:26px auto;padding:34px;text-align:center}
+.handoff .av{width:84px;height:84px;border-radius:50%;background:var(--teal-l);display:grid;place-items:center;font-size:40px;margin:0 auto 14px}
+.handoff h2{font-size:27px}.handoff .lead{margin:12px auto 22px;font-size:18px}
+.handoff .prev{background:var(--green-l);color:var(--green);border-radius:10px;padding:8px 12px;font-size:14.5px;margin-bottom:18px;display:inline-block}
+.rolebtn.dim{opacity:.45}
+footer{color:var(--mute);font-size:12.5px;padding:14px 18px 30px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="modal-bg" id="modalBg"><div class="modal" id="modal"></div></div>
+<div class="toast" id="toast"></div>
+<script>
+/* DigiHealth MVP: one staff-facing app, one shared record. All data is fictional.
+   WhatsApp is SIMULATED: no real messages are sent. Reference ranges are simplified
+   demonstration values, not validated clinical decision rules. */
+const START=new Date(2026,10,16), KEY="digihealth-v7", FACILITY="Al Noor Family Clinic";
+const CFG={remind:[3,5],window:7,unassigned:1};
+const STAFF={
+ nurse:{name:"Huda",title:"Screening nurse",icon:"📝",nav:["dash","patients","screening"]},
+ lab:{name:"Ravi",title:"Lab technician",icon:"🧪",nav:["dash","lab","patients"]},
+ omar:{name:"Dr. Omar",ar:"د. عمر",title:"Doctor · diabetes & cholesterol",icon:"🩺",nav:["dash","review","patients"]},
+ layla:{name:"Dr. Layla",ar:"د. ليلى",title:"Doctor · kidney",icon:"🩺",nav:["dash","review","patients"]},
+ coord:{name:"Mariam",title:"Care coordinator",icon:"📋",nav:["dash","cases","whatsapp","appts","patients"]},
+ mgr:{name:"Salma",title:"Clinic manager",icon:"📊",nav:["dash","reports","cases","patients"]}};
+const NAV={dash:["🏠","Dashboard"],patients:["👤","Patients"],screening:["📝","Screening"],lab:["🧪","Lab"],review:["🩺","Doctor review"],cases:["📂","Follow-up"],whatsapp:["💬","WhatsApp"],appts:["📅","Appointments"],reports:["📊","Reports"]};
+const TESTS={
+ hba1c:{name:"HbA1c (blood sugar)",unit:"%",ref:"below 5.7%",lo:4,hi:12,okFrom:4,okTo:5.7,inRef:v=>v<5.7},
+ ldl:{name:"LDL cholesterol",unit:"mmol/L",ref:"below 3.0 mmol/L",lo:1,hi:7,okFrom:1,okTo:3,inRef:v=>v<3},
+ egfr:{name:"eGFR (kidney function)",unit:"mL/min",ref:"above 60 mL/min",lo:0,hi:120,okFrom:60,okTo:120,inRef:v=>v>60}};
+const ROUTE={hba1c:"omar",ldl:"omar",egfr:"layla"};
+const DECISIONS={nfa:"No follow-up needed",routine:"Routine check later",appt:"Needs a visit",invest:"Needs more tests",refer:"Refer to a specialist",urgent:"Needs an urgent visit"};
+const OUTCOMES={done:"Patient was seen and has a plan",nfa:"Doctor reviewed: nothing more needed",referred:"Referral accepted by the other clinic",declined:"Patient said no (doctor approved)",transferred:"Moved to another clinic, with a handover note"};
+const PLANS={med:"Start or adjust treatment",recheck:"Recheck the test in 3 months",refer:"Refer to a specialist"};
+const FATIMA={name:"Fatima Al Mansoori",dob:"1974-03-12",sex:"Female",phone:"+971 50 123 1182",lang:"ar",channel:"WhatsApp",natId:"784-1974-1042335-1",consent:true};
+const AHMED_NAT="784-1979-1189027-3";
+
+let S=null,MODAL=null;
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const load=()=>{try{const t=localStorage.getItem(KEY);if(t)return JSON.parse(t)}catch(e){}return null};
+const dd=d=>{const x=new Date(START);x.setDate(x.getDate()+d);return x};
+const fmt=d=>dd(d).toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"});
+const fmtAr=d=>dd(d).toLocaleDateString("ar-AE",{weekday:"long",day:"numeric",month:"long"});
+const esc=t=>String(t??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
+const P=id=>S.patients[id],E=id=>S.episodes.find(e=>e.id===id),T=id=>S.tests.find(t=>t.id===id),C=id=>S.cases.find(c=>c.id===id);
+const byNat=n=>Object.values(S.patients).find(p=>p.natId===n);
+const who=()=>STAFF[S.role].name, age=p=>2026-parseInt(p.dob.slice(0,4),10);
+const U=(k,v)=>{S.ui[k]=v;save()};
+function toast(t){const el=document.getElementById("toast");el.textContent=t;el.classList.add("on");clearTimeout(toast._t);toast._t=setTimeout(()=>el.classList.remove("on"),3000)}
+function ev(ref,text,tone,actor){S.events.push(Object.assign({day:S.day,actor:actor||who(),text,tone:tone||"teal"},ref))}
+
+/* ================= core actions (the single shared workflow) ================= */
+function regPatient(d){const p={id:"P-"+(++S.n.p),name:d.name.trim(),first:d.name.trim().split(/\s+/)[0],dob:d.dob,sex:d.sex,phone:d.phone.trim(),lang:d.lang,channel:d.channel,natId:d.natId.trim(),consent:!!d.consent,status:"Active",regDay:S.day,phoneHist:[],badPhone:!!d.badPhone};
+ S.patients[p.id]=p;ev({pid:p.id},`Patient registered with ID ${p.id}`);return p}
+function dupes(d,skip){const n=(d.name||"").trim().toLowerCase(),ph=(d.phone||"").replace(/\D/g,""),nat=(d.natId||"").trim();const out=[];
+ Object.values(S.patients).forEach(p=>{if(p.id===skip)return;if(nat&&p.natId===nat)out.push({p,why:"same ID number",strong:true});
+  else if(n&&d.dob&&p.name.toLowerCase()===n&&p.dob===d.dob)out.push({p,why:"same name and date of birth"});
+  else if(ph.length>=9&&p.phone.replace(/\D/g,"")===ph)out.push({p,why:"same phone number"})});return out}
+function newEpisode(pid,programme){const e={id:"S-"+(++S.n.s),pid,day:S.day,facility:FACILITY,programme:programme||"Comprehensive health screening",staff:who(),assess:null};
+ S.episodes.push(e);ev({pid,eid:e.id},`Screening visit ${e.id} started (${e.programme})`);return e}
+function orderTest(eid,test){const e=E(eid),t={id:"T-"+(++S.n.t),eid,pid:e.pid,test,status:"Ordered",orderedDay:S.day,collectedDay:null,value:null,releasedDay:null,note:"",hist:[],doctor:ROUTE[test],review:null};
+ S.tests.push(t);ev({pid:e.pid,eid,tid:t.id},`${TESTS[test].name} ordered (${t.id})`);return t}
+function saveAssess(eid,d){const e=E(eid);e.assess={bp:d.bp,notes:d.notes,by:who(),day:S.day};ev({pid:e.pid,eid},"Screening assessment recorded");d.tests.forEach(t=>orderTest(eid,t))}
+const tref=t=>({pid:t.pid,eid:t.eid,tid:t.id});
+function collect(tid){const t=T(tid),re=t.status==="New sample needed";t.status="Sample collected";t.collectedDay=S.day;t.hist.push({day:S.day,what:re?"New sample collected":"Sample collected",by:who()});ev(tref(t),`${re?"New sample":"Sample"} collected for ${TESTS[t.test].name}`)}
+function rejectSample(tid,reason){const t=T(tid);t.status="New sample needed";t.hist.push({day:S.day,what:"Sample rejected: "+reason,by:who()});ev(tref(t),`Sample rejected (${reason}). New sample needed.`,"coral")}
+function release(tid,value,note){const t=T(tid);t.hist.push({day:S.day,what:`Result ${value} ${TESTS[t.test].unit} released`,by:who()});t.value=value;t.note=note||"";t.status="Sent to doctor";t.releasedDay=S.day;t.review={status:"Waiting for doctor"};
+ ev(tref(t),`${TESTS[t.test].name} result recorded and released to ${STAFF[t.doctor].name} for review`)}
+function reviewResult(tid,d){const t=T(tid);t.review={status:"Reviewed",decision:d.decision,urgency:d.urgency,assessment:d.assessment,by:who(),day:S.day};
+ ev(tref(t),`Result reviewed. Decision: ${DECISIONS[d.decision]}`,d.decision==="nfa"?"green":"teal");if(d.decision==="nfa")return null;
+ const c={id:"F-"+(++S.n.f),pid:t.pid,eid:t.eid,tid,reason:`${DECISIONS[d.decision]} after ${TESTS[t.test].name} result`,decision:d.decision,urgency:d.urgency,clinician:t.doctor,createdDay:S.day,owner:"Mariam",
+  appt:null,apptHist:[],calls:[],reply:null,replyDay:null,slots:null,slotsDay:null,firstMsgDay:null,reminders:[],outcome:null,closed:null,decline:null,referral:d.decision==="refer"?{ack:false}:null,handovers:[]};
+ S.cases.push(c);ev({pid:c.pid,eid:c.eid,cid:c.id},`Follow-up case ${c.id} opened and given to Mariam`,"amber","DigiHealth");return c}
+const cref=c=>({pid:c.pid,eid:c.eid,cid:c.id});
+function acceptCase(cid){const c=C(cid),prev=c.owner;c.owner=who();if(prev)c.handovers.push({day:S.day,from:prev,to:c.owner});ev(cref(c),prev?`Case handed over from ${prev} to ${c.owner}`:`${c.owner} accepted ownership of the case`)}
+function releaseCase(cid){const c=C(cid);c.handovers.push({day:S.day,from:c.owner,to:null});ev(cref(c),`${c.owner} released the case. It is back in the unassigned queue.`,"amber");c.owner=null}
+function tplText(k,c,ar,x){const p=P(c.pid),d=STAFF[c.clinician],dn=ar?d.ar:d.name,f=ar?fmtAr:fmt,cl=ar?"عيادة النور للعائلة":FACILITY;x=x||{};
+ switch(k){
+ case"invite":return ar?`مرحباً ${p.first}، معك ${cl}. يودّ ${dn} رؤيتك في زيارة متابعة بعد الفحص الصحي الأخير. أرسل 1 لحجز زيارة، أو 2 للتحدث مع المنسّقة.`:`Hello ${p.first}, this is ${cl}. ${dn} would like to see you for a follow-up after your recent health screening. Reply 1 to book a visit, or 2 to speak with our coordinator.`;
+ case"remind":return ar?`تذكير من ${cl}: ما زلنا نودّ ترتيب زيارة المتابعة. أرسل 1 للحجز، أو 2 للتحدث مع المنسّقة.`:`Reminder from ${cl}: we would still like to arrange your follow-up visit. Reply 1 to book, or 2 to speak with our coordinator.`;
+ case"offer":return (ar?`شكراً لك. المواعيد المتاحة مع ${dn}:`:`Thank you. These times are available with ${dn}:`)+"\n"+x.slots.map((s,i)=>`${"ABC"[i]}) ${f(s)} · ${["09:30","16:15","10:45"][i]}`).join("\n")+"\n"+(ar?"أرسل A أو B أو C.":"Reply A, B or C.");
+ case"confirm":return ar?`تم حجز زيارتك مع ${dn} يوم ${f(x.day)}. سنذكّرك قبل الموعد بيوم.`:`Your visit with ${dn} is booked for ${f(x.day)}. We will remind you the day before.`;
+ case"apptRemind":return ar?`تذكير: زيارتك مع ${dn} غداً، ${f(x.day)}.`:`Reminder: your visit with ${dn} is tomorrow, ${f(x.day)}.`;
+ case"contact":return ar?`مرحباً ${p.first}، تحاول ${cl} التواصل معك. يُرجى إرسال أفضل رقم هاتف للتواصل.`:`Hello ${p.first}, ${cl} is trying to reach you. Please reply with the best phone number to contact you.`;
+ case"plan":return (ar?`شكراً لزيارتك. سجّل ${dn} خطة رعايتك.`:`Thank you for your visit. ${dn} has recorded your care plan.`)+(x.recheck!=null?(ar?` سنذكّرك بموعد الفحص القادم يوم ${f(x.recheck)}.`:` We will remind you about your next check on ${f(x.recheck)}.`):"")}}
+const TPL={invite:"Follow-up invitation",remind:"Reminder",contact:"Request to update contact details"};
+function sendMsg(cid,tpl,x){const c=C(cid),p=P(c.pid),ar=p.lang==="ar",fail=p.badPhone;x=x||{};
+ S.msgs.push({id:++S.n.m,pid:p.id,cid,day:S.day,dir:"out",tpl,text:tplText(tpl,c,ar,x),alt:ar?tplText(tpl,c,false,x):null,status:fail?"Failed":"Delivered (simulated)"});
+ if(!fail&&c.firstMsgDay==null)c.firstMsgDay=S.day;
+ ev(cref(c),fail?`WhatsApp message could not be delivered to ${p.phone} (simulated)`:`WhatsApp ${x.auto?"automatic ":""}message sent: ${TPL[tpl]||({offer:"appointment times",confirm:"appointment confirmation",apptRemind:"appointment reminder",plan:"after-visit note"})[tpl]} (simulated)`,fail?"coral":"teal",x.auto?"DigiHealth":null)}
+function patientReply(cid,kind,i){const c=C(cid),p=P(c.pid),ar=p.lang==="ar";
+ const txt={book:"1",human:"2",slot:"ABC"[i||0],phone:ar?"تغيّر رقمي. الرجاء استخدام ‎+971 50 555 0142":"My number has changed. Please use +971 50 555 0142",decline:ar?"لا أرغب في الحضور، شكراً.":"I do not want to come, thank you."}[kind];
+ const alt={phone:"My number has changed. Please use +971 50 555 0142",decline:"I do not want to come, thank you."}[kind];
+ S.msgs.filter(m=>m.cid===cid&&m.dir==="out"&&m.status.startsWith("Delivered")).forEach(m=>m.status="Responded");
+ S.msgs.push({id:++S.n.m,pid:p.id,cid,day:S.day,dir:"in",text:txt,alt:ar&&alt?alt:null,status:"Received (simulated)"});
+ const lab={book:"asked to book a visit",human:"asked to speak with the coordinator",phone:"reported a new phone number",decline:"said they do not want to come",slot:"chose an appointment time"}[kind];
+ ev(cref(c),`Patient replied on WhatsApp: ${lab} (simulated)`,kind==="decline"?"coral":"teal",p.first);
+ if(kind==="slot")return bookAppt(cid,c.slots[i],"WhatsApp");c.reply=kind;c.replyDay=S.day}
+function offerTimes(cid){const c=C(cid);c.slots=[S.day+1,S.day+3,S.day+6];c.slotsDay=S.day;c.reply=null;sendMsg(cid,"offer",{slots:c.slots})}
+function bookAppt(cid,day,via){const c=C(cid),p=P(c.pid);if(c.appt)c.apptHist.push(c.appt);
+ c.appt={day,status:via==="WhatsApp"?"Confirmed":"Booked",madeDay:S.day,via};c.reply=null;c.slots=null;
+ ev(cref(c),`Appointment ${c.apptHist.length?"re":""}booked for ${fmt(day)} with ${STAFF[c.clinician].name} (${via==="WhatsApp"?"patient confirmed on WhatsApp":"by phone"})`,"teal",via==="WhatsApp"?"DigiHealth":null);
+ if(p.channel==="WhatsApp"&&!p.badPhone)sendMsg(cid,"confirm",{day,auto:true})}
+function markAppt(cid,st){const c=C(cid);c.appt.status=st;ev(cref(c),st==="Attended"?"Patient attended the appointment":st==="Missed"?"Patient missed the appointment. Case stays open.":"Appointment cancelled. Case stays open.",st==="Attended"?"green":"coral")}
+function recordOutcome(cid,d){const c=C(cid);c.outcome={summary:d.summary,plan:d.plan,recheckDay:d.plan.includes("recheck")?S.day+90:null,by:who(),day:S.day};
+ ev(cref(c),`Doctor's notes saved: ${d.plan.map(k=>PLANS[k].toLowerCase()).join("; ")||"no further treatment"}`,"green");
+ if(c.outcome.recheckDay!=null){S.future.push({pid:c.pid,day:c.outcome.recheckDay,text:`Recheck ${TESTS[T(c.tid).test].name} (planned by ${who()})`});ev(cref(c),`Future task created: recheck on ${fmt(c.outcome.recheckDay)}`,"teal","DigiHealth")}
+ const p=P(c.pid);if(p.channel==="WhatsApp"&&!p.badPhone)sendMsg(cid,"plan",{recheck:c.outcome.recheckDay,auto:true})}
+function logCall(cid,outcome){const c=C(cid),p=P(c.pid);c.calls.push({day:S.day,outcome});
+ ev(cref(c),`Phone call to ${p.phone}: ${outcome}`,outcome==="Reached"?"teal":"amber");
+ if(outcome==="Wrong number"){p.badPhone=true}
+ if(outcome==="Patient declines"){c.decline={day:S.day,by:who(),auth:null};c.reply=null;ev(cref(c),`Patient declined after discussion. Sent to ${STAFF[c.clinician].name} for authorisation.`,"amber")}}
+function authoriseDecline(cid){const c=C(cid);c.decline.auth={by:who(),day:S.day};ev(cref(c),"Doctor authorised closing the case as ‘patient declined’","amber")}
+function updatePhone(pid,phone){const p=P(pid);p.phoneHist.push({phone:p.phone,until:S.day});p.phone=phone;p.badPhone=false;
+ S.cases.filter(c=>c.pid===pid&&c.reply==="phone").forEach(c=>{c.reply=null});ev({pid},`Phone number updated to ${phone}. Previous number kept in history.`)}
+function ackReferral(cid){const c=C(cid);c.referral.ack=true;ev(cref(c),"Receiving clinic acknowledged the referral","green")}
+function closable(c){const o={};
+ o.done=c.appt&&c.appt.status==="Attended"&&c.outcome?null:"the patient has not been seen and the doctor has not written notes";
+ o.nfa=c.outcome&&!c.outcome.plan.length?null:"the doctor has not written that nothing more is needed";
+ o.referred=c.referral&&c.referral.ack?null:"the other clinic has not accepted a referral";
+ o.declined=c.decline&&c.decline.auth?null:"needs a call with the patient and the doctor's approval";
+ o.transferred="";return o}
+function closeCase(cid,outcome,notes){const c=C(cid);c.closed={outcome,day:S.day,by:who(),notes};ev(cref(c),`Case closed: ${OUTCOMES[outcome]}`,"green")}
+
+/* ================= states: each entity has its own status ================= */
+function epStatus(e){if(!e.assess)return["Registered","c-amber"];const ts=S.tests.filter(t=>t.eid===e.id);
+ if(ts.some(t=>t.status==="Ordered"||t.status==="New sample needed"))return["Waiting for sample","c-amber"];
+ if(ts.some(t=>t.status==="Sample collected"))return["Waiting for result","c-amber"];
+ if(ts.some(t=>t.review&&t.review.status!=="Reviewed"))return["In progress","c-teal"];return["Completed","c-green"]}
+const tChip=t=>({"Ordered":"c-grey","Sample collected":"c-amber","Sent to doctor":"c-teal","New sample needed":"c-coral"})[t.status];
+function cs(c){const p=P(c.pid),d=S.day,doc=STAFF[c.clinician].name,o=(status,tone,next,why,due,act,owner)=>({status,tone,next,why,due,act,owner:owner||c.owner||"No owner"});
+ if(c.closed)return o("Closed","green","None","",null,null);
+ if(!c.owner)return o("Unassigned","coral","Accept ownership","No one is responsible for this patient yet.",c.createdDay+(c.urgency==="Urgent"?0:CFG.unassigned),"accept");
+ if(c.decline)return c.decline.auth?o("Ready to close","green","Close the case","The doctor authorised the patient's decision.",c.decline.auth.day+1,"close"):o("Waiting for doctor's approval","amber",`${doc} must authorise the decision`,"The patient declined. Only a doctor can authorise closing.",c.decline.day+1,null,doc);
+ if(c.outcome)return o("Ready to close","green","Close the case","The patient was seen and the doctor wrote the notes.",c.outcome.day+1,"close");
+ if(c.referral)return c.referral.ack?o("Ready to close","green","Close the case","The receiving clinic accepted the referral.",d,"close"):o("Waiting for referral","amber","Confirm the receiving clinic accepted the referral","A referral nobody acknowledged can be lost.",c.createdDay+3,"ack");
+ const a=c.appt;
+ if(a){if(a.status==="Attended")return o("Waiting for doctor's notes","amber",`${doc} documents the outcome`,"The patient came. The doctor still needs to write the visit notes.",a.day+1,null,doc);
+  if(a.status==="Missed"||a.status==="Cancelled")return o(a.status==="Missed"?"Missed appointment":"Appointment cancelled","coral","Call the patient to rebook","The patient still needs care.",a.day+1,"call");
+  if(a.day<=d)return o(a.day<d?"Visit not recorded":"Appointment today","amber","Record attended or missed","Booking is not the same as attending.",a.day,"attend");
+  return o("Appointment booked","teal",`Visit on ${fmt(a.day)}`,"A reminder goes out the day before.",a.day,"wait")}
+ if(p.badPhone)return o("Cannot reach patient","coral","Update the phone number","Messages cannot reach this number.",d,"phone");
+ if(c.reply==="book")return o("Patient wants to book","amber","Offer appointment times","The patient asked to book.",c.replyDay,"offer");
+ if(c.reply==="human")return o("Patient asked for a call","amber","Call the patient","The patient asked to speak with a person.",c.replyDay,"call");
+ if(c.reply==="phone")return o("Contact details changed","amber","Update the phone number","The patient reported a new number.",c.replyDay,"phone");
+ if(c.reply==="decline")return o("Patient hesitant","amber","Call the patient to discuss","A message alone is not a documented decision.",c.replyDay,"call");
+ if(c.slots)return o("Waiting for patient reply","teal","Patient is choosing a time","",c.slotsDay+2,"wait");
+ const last=c.calls[c.calls.length-1];
+ if(last&&last.outcome==="No answer")return o("Cannot reach patient","coral","Call again",`${c.calls.length} call attempt${c.calls.length>1?"s":""} without answer.`,last.day+1,"call");
+ if(c.firstMsgDay==null)return o("Not contacted yet","amber",p.channel==="WhatsApp"?"Send the follow-up invitation":"Call the patient","The patient has not been contacted yet.",c.createdDay+1,p.channel==="WhatsApp"?"send":"call");
+ const k=d-c.firstMsgDay;
+ if(k>=CFG.window)return o("No response","coral","Call the patient",`No reply after ${CFG.window} days and ${c.reminders.length} reminder${c.reminders.length===1?"":"s"}.`,c.firstMsgDay+CFG.window,"call");
+ return o("Waiting for patient reply","teal",`Automatic reminders on day ${CFG.remind.join(" and ")}; call on ${fmt(c.firstMsgDay+CFG.window)}`,"A sent message is not proof the patient acted.",c.firstMsgDay+CFG.window,"wait")}
+const overdue=c=>{const s=cs(c);return !c.closed&&s.due!=null&&s.due<S.day};
+/* every open item becomes a task with an owner, a reason and a due date */
+function tasks(){const L=[],add=(role,pid,what,why,due,tone,nav)=>L.push({role,pid,what,why,due,tone,nav});
+ S.episodes.forEach(e=>{if(!e.assess)add("nurse",e.pid,"Record assessment and order tests","The screening visit has no assessment yet.",e.day,"amber",{view:"screening",episode:e.id})});
+ S.tests.forEach(t=>{const n=TESTS[t.test].name;
+  if(t.status==="Ordered")add("nurse",t.pid,`Collect sample for ${n}`,"The test was ordered but no sample was taken.",t.orderedDay,"amber",{view:"screening",episode:t.eid});
+  if(t.status==="New sample needed")add("nurse",t.pid,`Collect a new sample for ${n}`,"The lab rejected the sample. Without a new one there is no result.",S.day,"coral",{view:"screening",episode:t.eid});
+  if(t.status==="Sample collected")add("lab",t.pid,`Record result for ${n}`,"A sample is waiting in the lab.",t.collectedDay+1,"amber",{view:"lab",test:t.id});
+  if(t.review&&t.review.status==="Waiting for doctor")add(t.doctor,t.pid,`Review ${n} result`,"A released result is not yet a reviewed result.",t.releasedDay+1,"amber",{view:"review",review:"t:"+t.id})});
+ S.cases.forEach(c=>{if(c.closed)return;const s=cs(c);
+  if(s.status==="Waiting for doctor's notes")add(c.clinician,c.pid,"Write the visit notes",s.why,s.due,"amber",{view:"review",review:"c:"+c.id});
+  else if(s.status==="Waiting for doctor's approval")add(c.clinician,c.pid,"Authorise or reject ‘patient declined’",s.why,s.due,"amber",{view:"review",review:"d:"+c.id});
+  else if(s.act&&s.act!=="wait")add("coord",c.pid,s.next,s.why,s.due,s.tone,{view:"cases",case:c.id})});
+ return L.sort((a,b)=>({coral:0,amber:1,green:2,teal:3})[a.tone]-({coral:0,amber:1,green:2,teal:3})[b.tone]||a.due-b.due)}
+function advance(n){for(let i=0;i<n;i++){S.day++;S.cases.forEach(c=>{if(c.closed||!c.owner)return;const p=P(c.pid);
+   if(c.firstMsgDay!=null&&!c.appt&&!c.reply&&!c.slots&&!c.decline&&!p.badPhone){const k=S.day-c.firstMsgDay;if(CFG.remind.includes(k)&&!c.reminders.includes(k)){c.reminders.push(k);sendMsg(c.id,"remind",{auto:true})}
+    if(k===CFG.window)ev(cref(c),`No reply after ${CFG.window} days. Case flagged for a phone call.`,"coral","DigiHealth")}
+   if(c.appt&&["Booked","Confirmed"].includes(c.appt.status)&&c.appt.day===S.day+1&&p.channel==="WhatsApp"&&!p.badPhone){sendMsg(c.id,"apptRemind",{day:c.appt.day,auto:true});c.appt.status="Reminder sent"}})}
+ save();render();toast("Date is now "+fmt(S.day))}
+
+/* ================= seed: built by running the real actions on past days ================= */
+function seed(){S={day:0,started:false,explore:false,role:"nurse",view:"dash",n:{p:1000,s:2000,t:3000,f:4000,m:0},patients:{},episodes:[],tests:[],cases:[],msgs:[],events:[],future:[],sel:{},ui:{},lastStep:null};
+ const as=(r,d)=>{S.role=r;S.day=d};
+ const start=(d,day,test)=>{as("nurse",day);const p=regPatient(d),e=newEpisode(p.id);saveAssess(e.id,{bp:"128/82",notes:"Routine screening.",tests:[test]});const t=S.tests[S.tests.length-1];collect(t.id);return{p,e,t}};
+ const result=(x,day,v,dec,urg)=>{as("lab",day);release(x.t.id,v,"");as(x.t.doctor,day);return reviewResult(x.t.id,{decision:dec,urgency:urg||"Routine",assessment:dec==="nfa"?"Within expected range. No action needed.":"Outside reference range. Follow-up visit needed."})};
+ // Noura: a complete, closed journey (history)
+ let x=start({name:"Noura Saeed",dob:"1982-06-02",sex:"Female",phone:"+971 56 222 3367",lang:"ar",channel:"WhatsApp",natId:"784-1982-1312088-2",consent:true},-40,"hba1c");
+ let c=result(x,-39,7.0,"appt");as("coord",-38);sendMsg(c.id,"invite");patientReply(c.id,"book");offerTimes(c.id);patientReply(c.id,"slot",0);
+ as("coord",-37);markAppt(c.id,"Attended");as("omar",-37);recordOutcome(c.id,{summary:"Discussed result. Treatment started.",plan:["med","recheck"]});as("coord",-36);closeCase(c.id,"done","Visit attended and plan documented.");
+ // Joseph: result reviewed, no further action
+ x=start({name:"Joseph Reyes",dob:"1990-01-20",sex:"Male",phone:"+971 54 333 2208",lang:"en",channel:"WhatsApp",natId:"784-1990-1405511-4",consent:true},-10,"ldl");result(x,-9,2.6,"nfa");
+ // Sara: appointment was yesterday, attendance not recorded yet
+ x=start({name:"Sara Menon",dob:"1987-09-14",sex:"Female",phone:"+971 52 444 9031",lang:"en",channel:"WhatsApp",natId:"784-1987-1207753-5",consent:true},-6,"ldl");
+ c=result(x,-5,5.1,"appt");as("coord",-4);sendMsg(c.id,"invite");patientReply(c.id,"book");offerTimes(c.id);patientReply(c.id,"slot",1);
+ // Khalid: wrong phone number, WhatsApp fails
+ x=start({name:"Khalid Rashid",dob:"1968-11-30",sex:"Male",phone:"+971 50 000 7725",lang:"ar",channel:"WhatsApp",natId:"784-1968-0996146-6",consent:true,badPhone:true},-4,"ldl");
+ c=result(x,-3,5.4,"appt");as("coord",-2);sendMsg(c.id,"invite");
+ // Hassan: case created yesterday, nobody owns it
+ x=start({name:"Hassan Yousef",dob:"1971-04-08",sex:"Male",phone:"+971 55 666 0193",lang:"en",channel:"WhatsApp",natId:"784-1971-1123700-7",consent:true},-3,"egfr");result(x,-2,52,"invest","Soon");
+ // Mohammed: sample rejected, needs recollection
+ x=start({name:"Mohammed Ali",dob:"1963-02-17",sex:"Male",phone:"+971 50 777 6649",lang:"ar",channel:"WhatsApp",natId:"784-1963-0873402-8",consent:true},-2,"egfr");as("lab",-1);rejectSample(x.t.id,"Sample haemolysed");
+ // Ahmed: registered and screened yesterday; his sample is waiting in the lab
+ start({name:"Ahmed Khan",dob:"1979-08-25",sex:"Male",phone:"+971 55 888 4410",lang:"en",channel:"WhatsApp",natId:AHMED_NAT,consent:true},-1,"hba1c");
+ as("nurse",0)}
+
+/* ================= guided story ================= */
+function G(){const f=byNat(FATIMA.natId),fe=f&&S.episodes.find(e=>e.pid===f.id),ft=fe&&S.tests.find(t=>t.eid===fe.id),fc=ft&&S.cases.find(c=>c.tid===ft.id);
+ const a=byNat(AHMED_NAT),at=a&&S.tests.find(t=>t.pid===a.id),ac=at&&S.cases.find(c=>c.tid===at.id),u=S.ui,L=[];
+ const lab=(ch,nm,t,v)=>({ch,role:"lab",view:"lab",scene:`${nm}'s blood sample has arrived in the lab. Your job: type the result and send it to the doctor.`,title:`Lab: send ${nm}'s result to the doctor`,done:()=>!!(t&&t.releasedDay!=null),focus(){S.sel.test=t.id;if(u["val_"+t.id]==null)u["val_"+t.id]=v},
+   text:()=>u.idok===t.id?`The result (${v}%) is typed in. Click “Send to doctor”.`:`First check it is the right patient: tick the box.`,target:()=>u.idok===t.id?"#relBtn":"#idok",after:`Ravi sent the result. It now waits for the doctor to look at it.`});
+ const rev=(ch,nm,t)=>({ch,role:"omar",view:"review",scene:`${nm}'s result is waiting for you. Your job: look at it and decide what should happen next.`,title:`Dr. Omar reviews ${nm}'s result`,done:()=>!!(t&&t.review&&t.review.status==="Reviewed"),focus(){S.sel.review="t:"+t.id},
+   text:()=>u["dec_"+t.id]?"Click “Save decision”.":"The doctor decides, not the system. Choose “Needs a visit”.",target:()=>u["dec_"+t.id]?"#saveReview":"#dec-appt",after:"Dr. Omar asked for a visit. DigiHealth put the patient on Mariam's follow-up list."});
+ const acc=(ch,nm,c)=>({ch,role:"coord",view:"cases",title:`Mariam takes ownership of ${nm}'s case`,done:()=>!!(c&&c.owner),focus(){S.sel.case=c.id;u.cf="open"},text:()=>"Unowned cases are how patients get lost. Click “Accept ownership”.",target:()=>"#primary",after:"Mariam now owns the case. Next action and due date are set."});
+ const snd=(ch,nm,c,p)=>({ch,role:"coord",view:"whatsapp",scene:`Dr. Omar wants to see ${nm}, so ${nm} is now on your follow-up list. Your job: invite the patient on WhatsApp, book the visit, and make sure it happens.`,title:`Send ${nm} a WhatsApp invitation`,done:()=>!!(c&&c.firstMsgDay!=null),focus(){S.sel.chat=p.id},text:()=>"The message holds no test result. Click “Send on WhatsApp (simulated)”.",target:()=>"#sendTpl",after:"Invitation delivered (simulated). Delivered is not the same as answered."});
+ const att=(ch,nm,c)=>({ch,role:"coord",view:"appts",title:`${nm}'s visit day: record attendance`,done:()=>!!(c&&c.appt&&c.appt.status==="Attended"),skipTo:()=>c.appt.day,text:()=>`Booking is not attending. Click “Attended” on ${nm}'s row.`,target:()=>"#att-"+c.id,after:`${nm} came. The case stays open until the doctor writes the visit notes.`});
+ const out=(ch,nm,c)=>({ch,role:"omar",view:"review",scene:`${nm} came to the visit. Your job: write down what you agreed with the patient.`,title:`Dr. Omar writes the visit notes`,done:()=>!!(c&&c.outcome),focus(){S.sel.review="c:"+c.id},text:()=>"The plan is ticked. Click “Save notes”.",target:()=>"#saveOutcome",after:"Notes saved. A recheck in 3 months is planned for the patient."});
+ const cls=(ch,nm,c)=>({ch,role:"coord",view:"cases",scene:`The doctor's notes are saved. Your job: check that everything is done and close ${nm}'s case.`,title:`Mariam closes ${nm}'s case`,done:()=>!!(c&&c.closed),focus(){S.sel.case=c.id;u.cf="open"},text:()=>MODAL==="close"?"Everything needed is there. Click “Close case”.":"Click “Close the case”.",target:()=>MODAL==="close"?"#confirmClose":"#primary",after:`${nm}'s case is closed with a documented outcome.`});
+ L.push({ch:"A",role:"nurse",view:"patients",scene:"Fatima, 52, has come to the clinic for a health screening. Your job: create her patient record, start her visit and take a blood sample.",title:"Register Fatima",done:()=>!!f,focus(){S.sel.patient=null;u.regOpen=true;Object.keys(FATIMA).forEach(k=>{if(u["r_"+k]==null)u["r_"+k]=FATIMA[k]})},text:()=>"Everything starts with one patient record. The form is filled in. Click “Register patient”.",target:()=>"#regBtn",after:"Fatima has one record and a patient ID. No duplicate was found."});
+ L.push({ch:"A",role:"nurse",view:"patients",title:"Start Fatima's screening visit",done:()=>!!fe,focus(){S.sel.patient=f.id},text:()=>"A patient can have many screening visits over time. Click “Start a screening visit”.",target:()=>"#newEp",after:"Screening visit created and linked to Fatima's record."});
+ L.push({ch:"A",role:"nurse",view:"screening",title:"Record the assessment and order the test",done:()=>!!(fe&&fe.assess),focus(){S.sel.episode=fe.id},text:()=>"HbA1c is ticked. Click “Save and order tests”.",target:()=>"#saveAssess",after:"Assessment saved. The test is linked to this visit."});
+ L.push({ch:"A",role:"nurse",view:"screening",title:"Collect the blood sample",done:()=>!!(ft&&ft.status!=="Ordered"),focus(){S.sel.episode=fe.id},text:()=>"Click “Sample collected”.",target:()=>"#collect-"+ft.id,after:"Sample collected. It appears in the lab queue."});
+ L.push(lab("A","Fatima",ft,"9.1"),rev("A","Fatima",ft),snd("A","Fatima",fc,f));
+ L.push({ch:"A",role:"coord",view:"whatsapp",title:"Fatima replies (simulated)",done:()=>!!(fc&&(fc.reply==="book"||fc.slots||fc.appt)),focus(){S.sel.chat=f.id},text:()=>"Play the patient: click “1 · Book a visit”.",target:()=>"#sim-book",after:"Fatima asked to book. Her case updated itself."});
+ L.push({ch:"A",role:"coord",view:"whatsapp",title:"Offer appointment times",done:()=>!!(fc&&(fc.slots||fc.appt)),focus(){S.sel.chat=f.id},text:()=>"Click “Offer appointment times”.",target:()=>"#offerBtn",after:"Three times offered."});
+ L.push({ch:"A",role:"coord",view:"whatsapp",title:"Fatima chooses a time (simulated)",done:()=>!!(fc&&fc.appt),focus(){S.sel.chat=f.id},text:()=>"Play the patient: click option A.",target:()=>"#sim-slot0",after:"Appointment confirmed by the patient. The case stays open."});
+ L.push(att("A","Fatima",fc),out("A","Fatima",fc),cls("A","Fatima",fc));
+ L.push({ch:"A",role:"coord",view:"patients",title:"Fatima's full history in one place",done:()=>!!u.chB,focus(){S.sel.patient=f.id},text:()=>"Registration, screening, test, review, messages, visit and closure are on one record. Scroll to look, then continue.",btn:{label:"Continue to Ahmed's story →",fn:"U('chB',1);render()"}});
+ L.push(Object.assign(lab("B","Ahmed",at,"8.2"),{scene:"A second patient: Ahmed. Huda registered him yesterday and took a blood sample. Your job: type his result and send it to the doctor.",after0:"Now Ahmed: he was registered and screened yesterday. His sample is waiting in the lab."}),rev("B","Ahmed",at),snd("B","Ahmed",ac,a));
+ L.push({ch:"B",role:"coord",view:"cases",title:"Ahmed does not reply",done:()=>!!(ac&&ac.firstMsgDay!=null&&S.day>=ac.firstMsgDay+CFG.window),focus(){S.sel.case=ac.id;u.cf="open"},skipTo:()=>ac.firstMsgDay+CFG.window,text:()=>"",after:"Seven days passed. DigiHealth sent reminders on day 3 and 5 and kept the case open."});
+ L.push({ch:"B",role:"coord",view:"cases",title:"No response: Mariam calls Ahmed",done:()=>!!(ac&&ac.calls.length),focus(){S.sel.case=ac.id},text:()=>MODAL==="call"?"He does not pick up. Click “No answer”.":"The case is flagged “No response”. Click “Call the patient”.",target:()=>MODAL==="call"?"#callNo":"#primary",after:"The call failed. The case is still open, still owned, with a new due date: tomorrow."});
+ L.push({ch:"B",role:"coord",view:"cases",title:"The case stays visible",done:()=>!!(ac&&ac.calls.length&&S.day>ac.calls[0].day),focus(){S.sel.case=ac.id},skipTo:()=>ac.calls[0].day+1,text:()=>"",after:"Next day. The case is on Mariam's list again."});
+ L.push({ch:"B",role:"coord",view:"cases",title:"Second call: Ahmed answers",done:()=>!!(ac&&ac.appt),focus(){S.sel.case=ac.id},text:()=>MODAL==="call"?"He answers and agrees to come. Click the first date.":"Click “Call again”.",target:()=>MODAL==="call"?"#callBook0":"#primary",after:"Ahmed is booked by phone. A patient who went silent is back in care."});
+ L.push(att("B","Ahmed",ac),out("B","Ahmed",ac),cls("B","Ahmed",ac));return L}
+function cur(){if(S.explore)return null;const st=G(),i=st.findIndex(x=>!x.done());return{i,st,s:st[i]}}
+function banner(){
+ if(S.explore)return`<div class="bcard free"><div class="txt"><div class="t2">Free explore mode</div><div class="t3">Switch roles above, open any screen, and move the date. Try registering Ahmed Khan again to see the duplicate check.</div></div><button onclick="advance(1)">+1 day</button><button onclick="advance(7)">+7 days</button><button class="go" onclick="setExplore(false)">Back to guided demo</button></div>`;
+ const g=cur();
+ if(g.i<0)return`<div class="bcard done"><div class="who"><b>✓</b><span>Both stories</span></div><div class="txt"><div class="t1">Demo complete</div><div class="t2">Fatima's loop is closed. Ahmed was recovered.</div><div class="t3">Both journeys are fully traceable on the patient record. Open Reports to see the measures, or explore freely.</div></div><button class="go" onclick="S.role='mgr';go('reports')">Open Reports</button><button onclick="setExplore(true)">Explore freely</button></div>`;
+ const s=g.s,nA=g.st.filter(x=>x.ch==="A").length,idx=s.ch==="A"?g.i+1:g.i+1-nA,tot=s.ch==="A"?nA:g.st.length-nA,here=S.role===s.role&&S.view===s.view;
+ const prev=g.i>0?(s.after0&&here?s.after0:g.st[g.i-1].after):null,skip=s.skipTo&&s.skipTo()>S.day;
+ return`<div class="bcard"><div class="who"><b>${idx}<span style="font-size:13px;opacity:.75"> / ${tot}</span></b><span>${s.ch==="A"?"Fatima":"Ahmed"}'s story</span></div>
+  <div class="txt">${prev&&here?`<div class="t0">✓ ${prev}</div>`:""}<div class="t1">You are ${STAFF[s.role].name} · ${STAFF[s.role].title}</div><div class="t2">${s.title}</div>
+  <div class="t3">${!here?"You left the guided step. Click the button to return.":skip?`Nothing to do until ${fmt(s.skipTo())}. Skip ahead.`:s.text()}</div></div>
+  ${!here?`<button class="go" id="gbtn" onclick="S.lastStep=null;render()">Return to this step →</button>`:skip?`<button class="go" id="gbtn" onclick="advance(${s.skipTo()-S.day})">⏩ Skip to ${fmt(s.skipTo())}</button>`:s.btn?`<button class="go" id="gbtn" onclick="${s.btn.fn}">${s.btn.label}</button>`:""}</div>`}
+function applyPulse(){document.querySelectorAll(".pulse").forEach(e=>e.classList.remove("pulse"));if(S.explore||!S.started)return;if(introKey()!=null){const b=document.querySelector("#introGo");if(b)b.classList.add("pulse");return}const g=cur();if(g.i<0)return;const s=g.s;
+ const t=(S.role!==s.role||S.view!==s.view||(s.skipTo&&s.skipTo()>S.day)||s.btn)?"#gbtn":s.target();const el=t&&document.querySelector(t);if(!el)return;el.classList.add("pulse");
+ const r=el.getBoundingClientRect();if(r.top<120||r.bottom>window.innerHeight-10)el.scrollIntoView({block:"center",behavior:"smooth"})}
+
+/* ================= shell ================= */
+function render(){const app=document.getElementById("app");if(!S.started){app.innerHTML=welcome();return}
+ if(!S.explore){const g=cur();if(g.i!==S.lastStep){S.lastStep=g.i;if(g.i>=0){S.role=g.s.role;S.view=g.s.view;if(g.s.focus)g.s.focus()}window.scrollTo(0,0)}}
+ const tk=tasks(),st=STAFF[S.role];if(!st.nav.includes(S.view))S.view="dash";const ik=introKey();
+ const badge={dash:tk.filter(t=>t.role===S.role).length,lab:tk.filter(t=>t.role==="lab").length,review:tk.filter(t=>t.role===S.role).length,cases:tk.filter(t=>t.role==="coord").length,screening:tk.filter(t=>t.role==="nurse").length};
+ app.innerHTML=`<header><div class="hbar"><div class="logo"><div class="dot">✚</div>DigiHealth</div><span class="sim">Demo · fictional data · WhatsApp is simulated</span>
+  <div style="margin-left:auto" class="row"><span class="date">📅 ${fmt(S.day)}</span><button class="link" onclick="setExplore(!S.explore)">${S.explore?"Guided demo":"Explore freely"}</button><button class="link" onclick="restart()">Restart demo</button></div></div>
+  <div class="rolebar"><span class="small muted">You are:</span>${Object.entries(STAFF).map(([k,r])=>`<button class="rolebtn ${k===S.role?"on":S.explore?"":"dim"}" onclick="setRole('${k}')">${r.icon} ${r.name} · ${r.title.split(" · ")[0]}</button>`).join("")}</div></header>
+ <div class="wrap">${strip()}${ik!=null?handoff(ik):banner()}<div class="layout" ${ik!=null?'style="display:none"':""}><nav class="side">${st.nav.map(v=>`<button class="${S.view===v?"on":""}" onclick="go('${v}')"><span>${NAV[v][0]}</span>${NAV[v][1]}${badge[v]&&v!=="dash"?`<i>${badge[v]}</i>`:""}</button>`).join("")}</nav>
+ <main>${({dash:vDash,patients:vPatients,screening:vScreening,lab:vLab,review:vReview,cases:vCases,whatsapp:vWhatsApp,appts:vAppts,reports:vReports})[S.view]()}</main></div></div>
+ <footer class="wrap">This is a competition prototype. All patients are fictional. WhatsApp messages are simulated and nothing is sent. Reference ranges are simplified demonstration values, not clinical decision rules: every clinical decision is made by a doctor. Data is kept only in this browser. A real deployment needs secure sign-in, access control, patient consent, approved message templates and hospital integration.</footer>`;
+ applyPulse()}
+function go(v,sel){closeModal();S.view=v;if(sel)Object.assign(S.sel,sel);else if(v==="patients")S.sel.patient=null;save();render();window.scrollTo(0,0)}
+function setRole(r){closeModal();S.role=r;S.view="dash";save();render()}
+function openTask(i){const t=tasks()[i];closeModal();S.role=t.role;S.view=t.nav.view;Object.assign(S.sel,t.nav);if(t.nav.view==="cases")S.ui.cf="open";save();render();window.scrollTo(0,0)}
+function setExplore(v){closeModal();S.explore=v;S.lastStep=null;if(v)clearReg();save();render()}
+function restart(){closeModal();seed();S.started=true;save();render();window.scrollTo(0,0)}
+function openModal(h,k){MODAL=k||"x";document.getElementById("modal").innerHTML=h;document.getElementById("modalBg").classList.add("on");render()}
+function closeModal(){MODAL=null;document.getElementById("modalBg").classList.remove("on")}
+function welcome(){const how=[["A result comes in","The lab sends it to the right doctor."],["The doctor decides","If a visit is needed, the patient goes on the follow-up list."],["The patient gets a WhatsApp","No app, no login. Reminders are automatic. No reply? The coordinator calls."],["Closed only after the visit","Not when a message is sent. Only when the patient was seen."]];
+ const team=[["nurse","registers the patient"],["lab","enters the test result"],["omar","decides what is needed"],["coord","contacts the patient"],["mgr","sees who is still waiting"]];
+ return`<div class="hero"><div class="logo" style="font-size:22px"><div class="dot">✚</div>DigiHealth</div>
+ <h1>No patient gets lost after a health screening.</h1>
+ <p class="lead">Today, a worrying test result can sit in a system while nobody is sure who should call the patient. DigiHealth is one shared to-do list for the clinic: it follows each patient from test result to doctor's visit and always shows who acts next.</p>
+ <div class="row" style="margin-top:24px"><button class="pri" id="startBtn" style="font-size:18px;padding:14px 26px" onclick="S.started=true;save();render()">Start the guided demo →</button><button onclick="S.started=true;setExplore(true)">Look around on my own</button></div>
+ <p class="small muted" style="margin-top:10px">About 4 minutes · no login · fictional patients · WhatsApp is simulated, nothing is sent</p>
+ <div class="label" style="margin-top:34px">How it works</div><div class="how">${how.map((h,i)=>`<div class="card"><div class="n">${i+1}</div><b>${h[0]}</b><span class="muted">${h[1]}</span></div>`).join("")}</div>
+ <div class="label" style="margin-top:28px">In the demo you play the clinic team, one person at a time</div><div class="team">${team.map(([k,j])=>`<div><span>${STAFF[k].icon}</span><b>${STAFF[k].name}</b><div class="small muted">${STAFF[k].title.split(" · ")[0]} · ${j}</div></div>`).join("")}</div>
+ <p class="small muted" style="margin-top:14px">You follow two patients: <b>Fatima</b>, who replies and comes to her visit, and <b>Ahmed</b>, who does not reply and has to be found again.</p></div>`}
+const STAGES=[["Register","nurse"],["Lab result","lab"],["Doctor decides","omar"],["Invite and book","coord"],["Visit notes","omar"],["Close","coord"]];
+function runStart(g){let j=g.i;while(j>0&&g.st[j-1].role===g.s.role&&g.st[j-1].ch===g.s.ch)j--;return j}
+function introKey(){if(S.explore||!S.started)return null;const g=cur();if(g.i<0)return null;const j=runStart(g);return S.ui.introSeen===g.s.ch+j?null:j}
+function strip(){if(S.explore)return"";const g=cur();if(g.i<0)return"";let n=g.s.ch==="B"?1:0;for(let k=1;k<=g.i;k++)if(g.st[k].ch===g.s.ch&&g.st[k-1].ch===g.s.ch&&g.st[k].role!==g.st[k-1].role)n++;
+ return`<div class="strip"><b style="margin-right:6px">${g.s.ch==="A"?"Fatima":"Ahmed"}'s journey</b>${STAGES.map(([l,r],i)=>`<div class="sg ${i<n?"done":i===n?"now":""}"><i>${i<n?"✓":i+1}</i>${l} <span class="who2">· ${STAFF[r].name}</span></div>`).join("")}</div>`}
+function handoff(j){const g=cur(),s=g.st[j],r=STAFF[s.role],prev=j>0&&g.st[j-1].ch===s.ch?g.st[j-1].after:null;
+ return`<div class="card handoff">${prev?`<div class="prev">✓ ${prev}</div>`:""}<div class="av">${r.icon}</div><div class="label" style="margin:0 0 6px">${j===0?"The demo starts here":"The work now passes to"}</div>
+ <h2>You are now ${r.name}, the ${r.title.split(" · ")[0].toLowerCase()}</h2><p class="lead">${s.scene}</p>
+ <button class="pri" id="introGo" style="font-size:17px;padding:13px 24px" onclick="U('introSeen','${s.ch}${j}');render();window.scrollTo(0,0)">Continue as ${r.name} →</button></div>`}
+
+/* ================= shared pieces ================= */
+const timeline=(evs)=>evs.length?`<div class="tl">${evs.slice().reverse().map(e=>`<div class="ev ${e.tone}"><small>${fmt(e.day)} · ${esc(e.actor)}</small>${esc(e.text)}</div>`).join("")}</div>`:`<div class="muted small">Nothing yet.</div>`;
+function rangeBar(test,v){const t=TESTS[test],p=x=>Math.max(0,Math.min(100,(x-t.lo)*100/(t.hi-t.lo)));
+ return`<div class="range"><div class="ok" style="left:${p(t.okFrom)}%;width:${p(t.okTo)-p(t.okFrom)}%"></div><div class="lg" style="left:${p(t.okFrom)}%">reference range (demo)</div><div class="mk" style="left:${p(v)}%"><b>${v} ${t.unit}</b></div></div>`}
+const pline=p=>`<b>${esc(p.name)}</b> <span class="muted small">· ${p.id} · ${age(p)} y · ${p.sex}</span>`;
+const pbtn=p=>`<button class="link" onclick="go('patients',{patient:'${p.id}'})">Open patient record</button>`;
+const dueTxt=d=>d==null?"":d<S.day?`<b style="color:var(--coral)">Overdue since ${fmt(d)}</b>`:d===S.day?"<b>Due today</b>":"Due "+fmt(d);
+
+/* ================= Dashboard ================= */
+function vDash(){const all=tasks(),mine=S.role==="mgr"?all:all.filter(t=>t.role===S.role),open=S.cases.filter(c=>!c.closed);
+ const row=t=>{const i=all.indexOf(t),p=P(t.pid);return`<div class="item"><span class="chip c-${t.tone}">${t.tone==="coral"?"Act now":t.tone==="green"?"Ready":"To do"}</span>
+  <div class="grow" style="min-width:240px"><b>${esc(t.what)}</b> · ${esc(p.name)}<div class="small muted">${esc(t.why)} · Owner: ${STAFF[t.role].name} · ${dueTxt(t.due)}</div></div><button class="${S.role===t.role?"pri":""}" onclick="openTask(${i})">Open →</button></div>`};
+ const k=(n,l,tone)=>`<div class="card pad" style="flex:1;min-width:150px"><div style="font-size:28px;font-weight:700;color:var(--${n&&tone?tone:"teal"})">${n}</div><div class="small muted">${l}</div></div>`;
+ return`<div class="vh"><h2>${S.role==="mgr"?"What needs attention today":"Good morning, "+STAFF[S.role].name}</h2><p class="muted">${S.role==="mgr"?"Every open task across the clinic, with its owner and due date.":"These are your tasks. Each one says why it matters and when it is due."}</p></div>
+ ${S.role==="mgr"||S.role==="coord"?`<div class="row" style="margin-bottom:14px;align-items:stretch">${k(open.filter(overdue).length,"Overdue cases","coral")}${k(open.filter(c=>["Cannot reach patient","No response","Missed appointment","Visit not recorded"].includes(cs(c).status)).length,"Patients at risk of being lost","coral")}${k(open.filter(c=>cs(c).act==="close").length,"Ready to close","green")}</div>`:""}
+ <div class="card">${mine.map(row).join("")||`<div class="empty">Nothing needs you right now.</div>`}</div>`}
+
+/* ================= Patients ================= */
+function plist(){const q=(S.ui.q||"").toLowerCase(),L=Object.values(S.patients).filter(p=>!q||[p.name,p.id,p.phone,p.natId].join(" ").toLowerCase().includes(q));
+ return L.map(p=>{const c=S.cases.find(c=>c.pid===p.id&&!c.closed);return`<div class="item click" onclick="go('patients',{patient:'${p.id}'})"><div class="grow">${pline(p)}<div class="small muted">${esc(p.phone)}</div></div>${c?`<span class="chip c-${cs(c).tone}">${cs(c).status}</span>`:""}</div>`}).join("")||`<div class="empty">No patient found. Check the spelling, or register a new patient.</div>`}
+function dupHtml(){const d={name:S.ui.r_name,dob:S.ui.r_dob,phone:S.ui.r_phone,natId:S.ui.r_natId},D=dupes(d);if(!D.length)return"";
+ return`<div class="box b-coral"><b>⚠ This patient may already be registered</b>${D.map(x=>`<div class="row" style="margin-top:6px"><span>${esc(x.p.name)} · ${x.p.id} (${x.why})</span><button onclick="go('patients',{patient:'${x.p.id}'})">Open existing record</button></div>`).join("")}
+  ${D.some(x=>x.strong)?`<div class="small" style="margin-top:6px">The ID number must be unique. Use the existing record.</div>`:`<label class="row small" style="margin-top:8px"><input type="checkbox" style="min-height:0;width:18px;height:18px" ${S.ui.r_diff?"checked":""} onchange="U('r_diff',this.checked)"> This is a different person. Register anyway.</label>`}</div>`}
+const rin=(k,label,type,ph)=>`<div><label>${label} <span class="req">*</span></label><input type="${type||"text"}" value="${esc(S.ui["r_"+k]||"")}" placeholder="${ph||""}" oninput="U('r_${k}',this.value);document.getElementById('dupBox').innerHTML=dupHtml()"></div>`;
+const rsel=(k,label,opts)=>`<div><label>${label} <span class="req">*</span></label><select onchange="U('r_${k}',this.value)">${opts.map(([v,l])=>`<option value="${v}" ${S.ui["r_"+k]===v?"selected":""}>${l}</option>`).join("")}</select></div>`;
+function regForm(){const u=S.ui;["sex","lang","channel"].forEach((k,i)=>{if(u["r_"+k]==null)u["r_"+k]=["Female","en","WhatsApp"][i]});
+ return`<div class="card pad" style="margin-bottom:16px"><h3>Register a new patient</h3><p class="small muted" style="margin:4px 0 14px">Fields marked <span class="req">*</span> are required. DigiHealth checks for an existing record while you type.</p>
+ <div class="label" style="margin-top:0">Who is the patient?</div><div class="form">${rin("name","Full name","text","e.g. Fatima Al Mansoori")}${rin("dob","Date of birth","date")}${rsel("sex","Sex",[["Female","Female"],["Male","Male"]])}${rin("natId","Emirates ID or facility ID number","text","784-XXXX-XXXXXXX-X")}</div>
+ <div class="label">How do we reach them?</div><div class="form">${rin("phone","Mobile phone number","tel","+971 5X XXX XXXX")}${rsel("lang","Preferred language",[["en","English"],["ar","Arabic"]])}${rsel("channel","Preferred way to be contacted",[["WhatsApp","WhatsApp"],["Phone","Phone call"]])}
+ <div><label>Consent</label><label class="row" style="font-weight:400"><input type="checkbox" style="min-height:0;width:20px;height:20px" ${u.r_consent?"checked":""} onchange="U('r_consent',this.checked)"> Patient agrees to be contacted about follow-up</label></div></div>
+ <div id="dupBox">${dupHtml()}</div>${u.regErr?`<div class="box b-coral"><b>Please fix this before saving:</b><ul style="margin:6px 0 0 18px;padding:0">${u.regErr.map(e=>`<li>${e}</li>`).join("")}</ul></div>`:""}
+ <div class="row" style="margin-top:16px"><button class="pri" id="regBtn" onclick="doRegister()">Register patient</button><button onclick="clearReg();render()">Cancel</button></div></div>`}
+function clearReg(){Object.keys(S.ui).filter(k=>k.startsWith("r_")||k==="regErr"||k==="regOpen").forEach(k=>delete S.ui[k])}
+function doRegister(){const u=S.ui,d={name:(u.r_name||"").trim(),dob:u.r_dob||"",sex:u.r_sex,phone:(u.r_phone||"").trim(),lang:u.r_lang,channel:u.r_channel,natId:(u.r_natId||"").trim(),consent:u.r_consent},er=[];
+ if(d.name.split(/\s+/).length<2)er.push("Full name: enter first name and family name.");
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(d.dob)||d.dob>"2026-11-16"||d.dob<"1900-01-01")er.push("Date of birth: choose a valid date in the past.");
+ if(d.natId.length<5)er.push("ID number: enter the patient's Emirates ID or facility ID.");
+ if(!/^\+?[\d\s-]+$/.test(d.phone)||d.phone.replace(/\D/g,"").length<9)er.push("Phone number: enter at least 9 digits, for example +971 50 123 4567.");
+ if(!d.consent)er.push("Consent: the patient must agree to be contacted before you can register them for follow-up.");
+ const D=dupes(d);if(D.some(x=>x.strong))er.push(`A patient with this ID number already exists (${D.find(x=>x.strong).p.id}). Open the existing record instead.`);else if(D.length&&!u.r_diff)er.push("A similar patient exists. Open that record, or tick “This is a different person”.");
+ if(er.length){u.regErr=er;save();return render()}
+ const p=regPatient(d);clearReg();S.sel.patient=p.id;save();render();toast(`Saved. ${p.name} is registered as ${p.id}.`)}
+function vPatients(){if(S.sel.patient&&P(S.sel.patient))return profile(P(S.sel.patient));
+ return`<div class="vh spread"><div><h2>Patients</h2><p class="muted">One record per person. Search before you register.</p></div>${S.role==="nurse"&&!S.ui.regOpen?`<button class="pri" onclick="U('regOpen',1);render()">＋ Register a new patient</button>`:""}</div>
+ ${S.ui.regOpen&&S.role==="nurse"?regForm():""}<input style="width:100%;margin-bottom:12px" placeholder="🔍 Search by name, patient ID, phone or ID number" value="${esc(S.ui.q||"")}" oninput="U('q',this.value);document.getElementById('plist').innerHTML=plist()">
+ <div class="card" id="plist">${plist()}</div>`}
+function profile(p){const eps=S.episodes.filter(e=>e.pid===p.id).reverse(),cases=S.cases.filter(c=>c.pid===p.id).reverse(),all=tasks(),tk=all.filter(t=>t.pid===p.id),msgs=S.msgs.filter(m=>m.pid===p.id),open=cases.find(c=>!c.closed);
+ const status=open?`${cs(open).status}: ${cs(open).next}`:eps.length?`Latest screening visit: ${epStatus(eps[0])[0]}`:"Registered. No screening visit yet.";
+ return`<button class="link" onclick="go('patients')">← All patients</button>
+ <div class="card pad" style="margin-top:8px"><div class="spread"><div><h2>${esc(p.name)}</h2><div class="muted">${p.id} · ${age(p)} years · ${p.sex} · ID ${esc(p.natId)}</div></div><span class="chip c-green">${p.status}</span></div>
+  <div class="kv" style="margin-top:12px"><div>Phone</div><div>${esc(p.phone)} ${p.badPhone?`<span class="chip c-coral">Number not working</span>`:""} ${S.role==="coord"?`<button class="link" onclick="U('editPhone','${p.id}');render()">Update number</button>`:""}${p.phoneHist.length?`<div class="tiny muted">Previous: ${p.phoneHist.map(h=>esc(h.phone)+" (until "+fmt(h.until)+")").join(", ")}</div>`:""}</div>
+  <div>Language · contact</div><div>${p.lang==="ar"?"Arabic":"English"} · ${p.channel} · consent ${p.consent?"given":"not given"}</div><div>Current status</div><div><b>${esc(status)}</b></div></div>
+  ${S.ui.editPhone===p.id?`<div class="box b-amber"><label class="fl">New phone number (confirm it with the patient first)</label><div class="row"><input id="newPhone" value="${esc(S.ui.newPhone||"")}" placeholder="+971 5X XXX XXXX"><button class="pri" id="savePhone" onclick="doPhone('${p.id}')">Save new number</button><button onclick="U('editPhone',null);render()">Cancel</button></div></div>`:""}
+  ${S.role==="nurse"?`<div style="margin-top:14px"><button class="pri" id="newEp" onclick="doNewEp('${p.id}')">＋ Start a screening visit</button></div>`:""}</div>
+ <div class="label">Outstanding tasks</div><div class="card">${tk.map(t=>`<div class="item"><span class="chip c-${t.tone}">${STAFF[t.role].name}</span><div class="grow"><b>${esc(t.what)}</b><div class="small muted">${esc(t.why)} · ${dueTxt(t.due)}</div></div><button onclick="openTask(${all.indexOf(t)})">Open →</button></div>`).join("")||`<div class="empty">No open tasks for this patient.</div>`}
+  ${S.future.filter(f=>f.pid===p.id).map(f=>`<div class="item"><span class="chip c-grey">Planned</span><div class="grow">${esc(f.text)}<div class="small muted">Reminder will be raised on ${fmt(f.day)}</div></div></div>`).join("")}</div>
+ <div class="label">Screening visits (${eps.length})</div>${eps.map(e=>`<div class="card pad" style="margin-bottom:10px"><div class="spread"><b>${e.id} · ${fmt(e.day)} · ${esc(e.programme)}</b><span class="chip ${epStatus(e)[1]}">${epStatus(e)[0]}</span></div>
+  ${S.tests.filter(t=>t.eid===e.id).map(t=>`<div class="row small" style="margin-top:8px"><span>${t.id} · ${TESTS[t.test].name}</span><span class="chip ${tChip(t)}">${t.status}</span>${t.value!=null?`<b>${t.value} ${TESTS[t.test].unit}</b>`:""}${t.review?`<span class="chip ${t.review.status==="Reviewed"?"c-green":"c-amber"}">${t.review.status==="Reviewed"?"Reviewed: "+DECISIONS[t.review.decision]:"Waiting for doctor"}</span>`:""}</div>`).join("")||`<div class="small muted" style="margin-top:6px">No tests ordered yet.</div>`}</div>`).join("")||`<div class="card empty">No screening visits yet.</div>`}
+ <div class="label">Follow-up cases (${cases.length})</div><div class="card">${cases.map(c=>`<div class="item"><div class="grow"><b>${c.id}</b> · ${esc(c.reason)}<div class="small muted">From visit ${c.eid} · owner ${cs(c).owner}${c.appt?` · appointment ${fmt(c.appt.day)} (${c.appt.status})`:""}${c.closed?` · closed ${fmt(c.closed.day)}: ${OUTCOMES[c.closed.outcome]}`:""}</div></div><span class="chip c-${cs(c).tone}">${cs(c).status}</span></div>`).join("")||`<div class="empty">No follow-up cases.</div>`}</div>
+ <div class="label">WhatsApp messages (${msgs.length}, simulated)</div><div class="card pad">${msgs.length?chatHtml(p.id):`<span class="muted">No messages.</span>`}</div>
+ <div class="label">Full history</div><div class="card pad">${timeline(S.events.filter(e=>e.pid===p.id))}</div>`}
+function doNewEp(pid){const e=newEpisode(pid);S.sel.episode=e.id;S.view="screening";save();render();toast(`Screening visit ${e.id} started.`)}
+function doPhone(pid){const v=document.getElementById("newPhone").value.trim();if(!/^\+?[\d\s-]+$/.test(v)||v.replace(/\D/g,"").length<9)return toast("Enter a valid phone number with at least 9 digits.");
+ updatePhone(pid,v);S.ui.editPhone=null;save();render();toast("Phone number updated. The old number is kept in the history.")}
+
+/* ================= Screening ================= */
+function vScreening(){const L=S.episodes.slice().sort((a,b)=>(epStatus(a)[0]==="Completed")-(epStatus(b)[0]==="Completed")||b.day-a.day);let e=E(S.sel.episode)||L[0];
+ return`<div class="vh"><h2>Screening</h2><p class="muted">One visit for one patient. Order the tests here.</p></div>
+ <div class="grid2"><div class="card">${L.map(x=>`<div class="item click ${e&&e.id===x.id?"sel":""}" onclick="S.sel.episode='${x.id}';render()"><div class="grow"><b>${esc(P(x.pid).name)}</b><div class="small muted">${x.id} · ${fmt(x.day)}</div></div><span class="chip ${epStatus(x)[1]}">${epStatus(x)[0]}</span></div>`).join("")}</div>
+ <div>${e?epDetail(e):`<div class="card empty">Open a patient and click “Start a screening visit”.</div>`}</div></div>`}
+function epDetail(e){const p=P(e.pid),ts=S.tests.filter(t=>t.eid===e.id),canAct=S.role==="nurse";
+ return`<div class="card pad"><div class="spread"><div>${pline(p)}<div class="small muted">Visit ${e.id} · ${fmt(e.day)} · ${esc(e.facility)} · ${esc(e.programme)} · staff: ${esc(e.staff)}</div></div><span class="chip ${epStatus(e)[1]}">${epStatus(e)[0]}</span></div>${pbtn(p)}
+ ${!e.assess?`<div class="label">Screening assessment</div><div class="form"><div><label>Blood pressure</label><input id="a_bp" value="132/84"></div><div><label>Notes</label><input id="a_notes" value="Family history of diabetes. No current medication."></div></div>
+  <div class="label">Which tests are needed?</div>${Object.entries(TESTS).map(([k,t])=>`<label class="opt"><input type="checkbox" name="atest" value="${k}" ${k==="hba1c"?"checked":""}><div><b>${t.name}</b><div class="small muted">Result goes to ${STAFF[ROUTE[k]].name}</div></div></label>`).join("")}
+  <button class="pri" id="saveAssess" ${canAct?"":"disabled"} onclick="doAssess('${e.id}')">Save and order tests</button>`
+ :`<div class="box b-teal"><b>Assessment</b> · BP ${esc(e.assess.bp)} · ${esc(e.assess.notes)} <span class="small muted">(${esc(e.assess.by)}, ${fmt(e.assess.day)})</span></div>
+  <div class="label">Tests in this visit</div>${ts.map(t=>`<div class="item" style="padding-left:0;padding-right:0"><div class="grow"><b>${TESTS[t.test].name}</b> <span class="small muted">· ${t.id}</span>${t.status==="New sample needed"?`<div class="small" style="color:var(--coral)">${esc(t.hist[t.hist.length-1].what)}</div>`:""}</div><span class="chip ${tChip(t)}">${t.status}</span>
+   ${t.status==="Ordered"||t.status==="New sample needed"?`<button class="pri" id="collect-${t.id}" ${canAct?"":"disabled"} onclick="collect('${t.id}');save();render();toast('Sample collected. It is now in the lab queue.')">${t.status==="Ordered"?"Sample collected":"New sample collected"}</button>`:""}</div>`).join("")}
+  ${canAct?`<div class="row" style="margin-top:10px"><select id="addTest">${Object.entries(TESTS).map(([k,t])=>`<option value="${k}">${t.name}</option>`).join("")}</select><button onclick="orderTest('${e.id}',document.getElementById('addTest').value);save();render();toast('Test ordered.')">＋ Order another test</button></div>`:""}`}</div>`}
+function doAssess(eid){const ts=[...document.querySelectorAll("input[name=atest]:checked")].map(x=>x.value);if(!ts.length)return toast("Tick at least one test, or the visit has nothing to follow up.");
+ saveAssess(eid,{bp:document.getElementById("a_bp").value,notes:document.getElementById("a_notes").value,tests:ts});save();render();toast("Assessment saved and tests ordered.")}
+
+/* ================= Laboratory ================= */
+function vLab(){const Q=S.tests.filter(t=>t.status!=="Sent to doctor").sort((a,b)=>(a.status!=="Sample collected")-(b.status!=="Sample collected")),done=S.tests.filter(t=>t.status==="Sent to doctor").reverse();
+ let t=T(S.sel.test);if(!t||t.status==="Sent to doctor")t=Q.find(x=>x.status==="Sample collected")||null;
+ return`<div class="vh"><h2>Lab</h2><p class="muted">Check the patient, type the result, send it to the doctor.</p></div>
+ <div class="grid2"><div><div class="card">${Q.map(x=>`<div class="item ${x.status==="Sample collected"?"click":""} ${t&&t.id===x.id?"sel":""}" ${x.status==="Sample collected"?`onclick="S.sel.test='${x.id}';U('idok',null);render()"`:""}><div class="grow"><b>${esc(P(x.pid).name)}</b><div class="small muted">${TESTS[x.test].name} · ${x.id}</div></div><span class="chip ${tChip(x)}">${x.status==="Ordered"?"Waiting for sample":x.status}</span></div>`).join("")||`<div class="empty">No tests waiting.</div>`}</div>
+  <div class="label">Released (${done.length})</div><div class="card">${done.slice(0,6).map(x=>`<div class="item"><div class="grow"><b>${esc(P(x.pid).name)}</b><div class="small muted">${TESTS[x.test].name} · ${x.value} ${TESTS[x.test].unit} · ${fmt(x.releasedDay)}</div></div><span class="chip ${x.review.status==="Reviewed"?"c-green":"c-amber"}">${x.review.status}</span></div>`).join("")||`<div class="empty">None yet.</div>`}</div></div>
+ <div>${t?labDetail(t):`<div class="card empty">Choose a test with a collected sample.</div>`}</div></div>`}
+function labDetail(t){const p=P(t.pid),x=TESTS[t.test],ok=S.ui.idok===t.id,can=S.role==="lab";
+ return`<div class="card pad"><h3>${x.name} · ${t.id}</h3>
+ <div class="box b-amber"><b>Check identity before entering the result</b><div class="kv" style="margin-top:8px"><div>Patient</div><div><b>${esc(p.name)}</b> · ${p.id}</div><div>Date of birth</div><div>${p.dob} (${age(p)} y, ${p.sex})</div><div>Screening visit</div><div>${t.eid} · ${fmt(E(t.eid).day)}</div><div>Sample collected</div><div>${fmt(t.collectedDay)}</div></div>
+  <label class="row" style="margin-top:10px;font-weight:600"><input type="checkbox" id="idok" style="min-height:0;width:22px;height:22px" ${ok?"checked":""} ${can?"":"disabled"} onchange="U('idok',this.checked?'${t.id}':null);render()"> The sample label matches this patient and visit</label></div>
+ <div class="label">Result</div><div class="row"><input id="labVal" type="number" step="0.1" min="0" style="width:130px;font-size:19px;font-weight:700" value="${esc(S.ui["val_"+t.id]??"")}" placeholder="value" oninput="U('val_${t.id}',this.value)"><b>${x.unit}</b><span class="muted small">Reference range (demo): ${x.ref}</span></div>
+ <div style="margin-top:10px"><label class="fl">Lab note (optional)</label><input id="labNote" style="width:100%" placeholder="e.g. repeated once"></div>
+ <div class="row" style="margin-top:14px"><button class="pri" id="relBtn" ${ok&&can?"":"disabled"} onclick="doRelease('${t.id}')">Send to doctor</button>
+  <select id="rejWhy" ${can?"":"disabled"}><option>Sample haemolysed</option><option>Not enough sample</option><option>Label unreadable</option></select><button class="warn" ${can?"":"disabled"} onclick="rejectSample('${t.id}',document.getElementById('rejWhy').value);save();render();toast('Sample rejected. The nurse has a task to collect a new one.')">Reject sample</button></div>
+ ${!ok?`<p class="small muted">Tick the identity box to unlock “Send to doctor”.</p>`:""}
+ <div class="label">Test history</div>${t.hist.map(h=>`<div class="small">${fmt(h.day)} · ${esc(h.by)} · ${esc(h.what)}</div>`).join("")}</div>`}
+function doRelease(tid){const v=parseFloat(document.getElementById("labVal").value);if(isNaN(v)||v<0)return toast("Type the result value first.");const t=T(tid);
+ release(tid,v,document.getElementById("labNote").value);S.ui.idok=null;save();render();toast(`Sent to doctor to ${STAFF[t.doctor].name} for review.`)}
+
+/* ================= Clinical review ================= */
+function vReview(){const me=S.role,R=S.tests.filter(t=>t.doctor===me&&t.review&&t.review.status==="Waiting for doctor"),O=S.cases.filter(c=>c.clinician===me&&!c.closed&&cs(c).status==="Waiting for doctor's notes"),D=S.cases.filter(c=>c.clinician===me&&!c.closed&&cs(c).status==="Waiting for doctor's approval");
+ let sel=S.sel.review||"";const valid=k=>{const[a,id]=k.split(":");return a==="t"?R.some(t=>t.id===id):a==="c"?O.some(c=>c.id===id):a==="d"?D.some(c=>c.id===id):false};
+ if(!valid(sel))sel=R[0]?"t:"+R[0].id:O[0]?"c:"+O[0].id:D[0]?"d:"+D[0].id:"";
+ const li=(k,p,sub,chip)=>`<div class="item click ${sel===k?"sel":""}" onclick="S.sel.review='${k}';render()"><div class="grow"><b>${esc(p.name)}</b><div class="small muted">${sub}</div></div>${chip||""}</div>`;
+ const grp=(t,h)=>h?`<div class="label" style="margin:12px 16px 4px">${t}</div>${h}`:"";
+ const left=grp(`Results to review · ${R.length}`,R.map(t=>li("t:"+t.id,P(t.pid),`${TESTS[t.test].name}: ${t.value} ${TESTS[t.test].unit}`,TESTS[t.test].inRef(t.value)?"":`<span class="chip c-amber">Outside range</span>`)).join(""))
+  +grp(`Visits: notes to write · ${O.length}`,O.map(c=>li("c:"+c.id,P(c.pid),`Attended ${fmt(c.appt.day)}`)).join(""))+grp(`Decisions to authorise · ${D.length}`,D.map(c=>li("d:"+c.id,P(c.pid),"Patient declined")).join(""));
+ const[a,id]=sel.split(":");
+ return`<div class="vh"><h2>Doctor review · ${STAFF[me].name}</h2><p class="muted">Results wait here until you look at them. You decide what happens next.</p></div>
+ <div class="grid2"><div class="card" style="padding-bottom:8px">${left||`<div class="empty">Nothing to review.</div>`}</div><div>${a==="t"?revDetail(T(id)):a==="c"?outDetail(C(id)):a==="d"?decDetail(C(id)):`<div class="card empty">All caught up.</div>`}</div></div>`}
+function revDetail(t){const p=P(t.pid),x=TESTS[t.test],u=S.ui,dec=u["dec_"+t.id],prev=S.tests.filter(o=>o.pid===t.pid&&o.test===t.test&&o.id!==t.id&&o.value!=null);
+ return`<div class="card pad"><div class="spread"><div>${pline(p)}<div class="small muted">Visit ${t.eid} · ${fmt(E(t.eid).day)} · BP ${esc(E(t.eid).assess.bp)} · ${esc(E(t.eid).assess.notes)}</div></div>${pbtn(p)}</div>
+ <div style="margin-top:12px"><b>${x.name}</b> <span class="small muted">· ${t.id} · released ${fmt(t.releasedDay)} by the lab${t.note?" · note: "+esc(t.note):""}</span>${rangeBar(t.test,t.value)}</div>
+ <div class="small muted">Previous results: ${prev.length?prev.map(o=>`${o.value} ${x.unit} (${fmt(o.releasedDay)})`).join(", "):"none on record"}. The range shown is a simplified demo value, not a clinical rule.</div>
+ <div class="label">Your notes</div><textarea id="revText" oninput="U('txt_${t.id}',this.value)">${esc(u["txt_"+t.id]??"")}</textarea>
+ <div class="label">Decision</div>${Object.entries(DECISIONS).map(([k,l])=>`<label class="opt ${dec===k?"on":""}" id="dec-${k}" onclick="U('dec_${t.id}','${k}');render()"><input type="radio" name="dec" ${dec===k?"checked":""}><b>${l}</b></label>`).join("")}
+ <div class="row"><label class="fl" style="margin:0">How soon?</label><select id="revUrg" onchange="U('urg_${t.id}',this.value)">${["Routine","Soon","Urgent"].map(o=>`<option ${u["urg_"+t.id]===o?"selected":""}>${o}</option>`).join("")}</select></div>
+ <div style="margin-top:14px"><button class="pri" id="saveReview" ${dec?"":"disabled"} onclick="doReview('${t.id}')">Save decision</button>${dec?"":` <span class="small muted">Choose a decision first.</span>`}</div></div>`}
+function doReview(tid){const u=S.ui,dec=u["dec_"+tid],txt=(document.getElementById("revText").value||"").trim()||(dec==="nfa"?"Reviewed. No further action required.":"Reviewed. Follow-up needed; see decision.");
+ const c=reviewResult(tid,{decision:dec,urgency:document.getElementById("revUrg").value,assessment:txt});save();render();toast(c?`Saved. ${P(c.pid).first} is now on Mariam's follow-up list.`:"Decision saved: no further action. Reason documented.")}
+function outDetail(c){const p=P(c.pid),t=T(c.tid);return`<div class="card pad"><div class="spread"><div>${pline(p)}<div class="small muted">Case ${c.id} · attended ${fmt(c.appt.day)}</div></div>${pbtn(p)}</div>
+ <div class="box b-teal"><b>Why this visit:</b> ${esc(c.reason)} · ${TESTS[t.test].name} ${t.value} ${TESTS[t.test].unit}</div>
+ <div class="label">What happened in the visit</div><textarea id="outText">Discussed the result with the patient. Lifestyle advice given.</textarea>
+ <div class="label">Plan</div>${Object.entries(PLANS).map(([k,l])=>`<label class="opt"><input type="checkbox" name="plan" value="${k}" ${k!=="refer"?"checked":""}><div><b>${l}</b>${k==="recheck"?`<div class="small muted">Creates a future task for ${fmt(S.day+90)}</div>`:""}</div></label>`).join("")}
+ <button class="pri" id="saveOutcome" onclick="doOutcome('${c.id}')">Save notes</button></div>`}
+function doOutcome(cid){recordOutcome(cid,{summary:document.getElementById("outText").value,plan:[...document.querySelectorAll("input[name=plan]:checked")].map(x=>x.value)});save();render();toast("Notes saved. Mariam can now close the case.")}
+function decDetail(c){const p=P(c.pid);return`<div class="card pad">${pline(p)}<div class="box b-amber"><b>The patient declined follow-up</b> after a phone discussion with ${esc(c.decline.by)} on ${fmt(c.decline.day)}. A case can be closed as “declined” only when a doctor authorises it.</div>
+ <div class="row" style="margin-top:14px"><button class="pri" onclick="authoriseDecline('${c.id}');save();render();toast('Authorised. The coordinator can now close the case as declined.')">Authorise closing as declined</button>
+ <button onclick="C('${c.id}').decline=null;ev(cref(C('${c.id}')),'Doctor asked the coordinator to try again','amber');save();render();toast('Sent back to the coordinator.')">Ask coordinator to try again</button></div></div>`}
+
+/* ================= Follow-up cases ================= */
+const FILTERS={open:["All open",c=>!c.closed],urgent:["Urgent",c=>!c.closed&&c.urgency==="Urgent"],over:["Overdue",c=>overdue(c)],
+ wait:["Waiting for reply",c=>cs(c).status==="Waiting for patient reply"],fail:["Cannot reach",c=>["Cannot reach patient","No response"].includes(cs(c).status)],miss:["Missed appointment",c=>["Missed appointment","Visit not recorded","Appointment cancelled"].includes(cs(c).status)],
+ ref:["Waiting for referral",c=>cs(c).status==="Waiting for referral"],close:["Ready to close",c=>cs(c).act==="close"],all:["Closed",c=>!!c.closed]};
+function vCases(){const f=S.ui.cf||"open",L=S.cases.filter(FILTERS[f][1]).sort((a,b)=>({coral:0,amber:1,green:2,teal:3})[cs(a).tone]-({coral:0,amber:1,green:2,teal:3})[cs(b).tone]);let c=C(S.sel.case);if(!c||!L.includes(c))c=L[0];
+ return`<div class="vh"><h2>Follow-up</h2><p class="muted">Everyone who still needs care. Each patient shows one thing to do next.</p></div>
+ <div class="chips">${Object.entries(FILTERS).map(([k,[l,fn]])=>`<button class="fchip ${f===k?"on":""}" onclick="U('cf','${k}');S.sel.case=null;render()">${l} · ${S.cases.filter(fn).length}</button>`).join("")}</div>
+ <div class="grid2"><div class="card">${L.map(x=>{const s=cs(x);return`<div class="item click ${c===x?"sel":""}" onclick="S.sel.case='${x.id}';render()"><div class="grow"><b>${esc(P(x.pid).name)}</b><div class="small muted">${x.closed?"Closed "+fmt(x.closed.day):"Next: "+esc(s.next)}</div><div class="tiny">${x.closed?"":s.owner+" · "+dueTxt(s.due)}</div></div><span class="chip c-${s.tone}">${s.status}</span></div>`}).join("")||`<div class="empty">No cases in this list.</div>`}</div>
+ <div>${c?caseDetail(c):`<div class="card empty">No case selected.</div>`}</div></div>`}
+function caseDetail(c){const p=P(c.pid),s=cs(c),t=T(c.tid),can=S.role==="coord";
+ const P1={accept:["Accept ownership",`doAccept('${c.id}')`],send:["Open WhatsApp to send the invitation",`go('whatsapp',{chat:'${p.id}'})`],offer:["Open WhatsApp to offer times",`go('whatsapp',{chat:'${p.id}'})`],call:[s.next,`openCall('${c.id}')`],
+  phone:["Update the phone number",`U('editPhone','${p.id}');U('newPhone','${c.reply==="phone"?"+971 50 555 0142":""}');go('patients',{patient:'${p.id}'})`],attend:["Go to Appointments to record attendance",`go('appts')`],close:["Close the case",`openClose('${c.id}')`],ack:["Receiving clinic has accepted the referral",`ackReferral('${c.id}');save();render()`]}[s.act];
+ return`<div class="card pad"><div class="spread"><div>${pline(p)}<div class="small muted">Case ${c.id} · from screening visit ${c.eid} · test ${c.tid}</div></div><span class="chip c-${s.tone}">${s.status}</span></div>
+ ${!c.closed?`<div class="box b-${s.tone==="teal"?"teal":s.tone}"><div class="kv"><div>Status</div><div><b>${s.status}</b>${s.why?". "+esc(s.why):""}</div><div>What to do next</div><div><b>${esc(s.next)}</b></div><div>Who</div><div>${esc(s.owner)}</div><div>By when</div><div>${dueTxt(s.due)}</div></div>
+  ${P1?`<div style="margin-top:12px"><button class="pri" id="primary" ${can?"":"disabled"} onclick="${P1[1]}">${P1[0]}</button>${can?"":` <span class="small muted">Only the coordinator can do this.</span>`}</div>`:""}</div>`
+ :`<div class="box b-green"><b>Closed ${fmt(c.closed.day)} by ${esc(c.closed.by)}</b><br>${OUTCOMES[c.closed.outcome]}${c.closed.notes?"<br><span class='small'>"+esc(c.closed.notes)+"</span>":""}</div>`}
+ <div class="kv" style="margin-top:14px"><div>Why</div><div>${esc(c.reason)}</div><div>Doctor</div><div>${STAFF[c.clinician].name} · how soon: <b>${c.urgency}</b></div><div>Created</div><div>${fmt(c.createdDay)}</div>
+  <div>Contact</div><div>${esc(p.phone)} ${p.badPhone?`<span class="chip c-coral">Not working</span>`:""} · ${S.msgs.filter(m=>m.cid===c.id).length} WhatsApp messages · ${c.calls.length} phone calls</div>
+  <div>Appointment</div><div>${c.appt?`${fmt(c.appt.day)} · <b>${c.appt.status}</b>`:"Not scheduled"}${c.apptHist.map(a=>`<div class="small muted">Earlier: ${fmt(a.day)} · ${a.status}</div>`).join("")}</div>
+  <div>Doctor's notes</div><div>${c.outcome?`${esc(c.outcome.summary)} Plan: ${c.outcome.plan.map(k=>PLANS[k]).join("; ")||"none"} (${esc(c.outcome.by)}, ${fmt(c.outcome.day)})`:"Not documented yet"}</div></div>
+ ${!c.closed&&can?`<div class="row" style="margin-top:14px"><button onclick="go('whatsapp',{chat:'${p.id}'})">💬 Open WhatsApp</button>${c.owner?`<button onclick="openCall('${c.id}')">📞 Log a phone call</button>`:""}${s.act!=="close"?`<button onclick="openClose('${c.id}')">Close case…</button>`:""}</div>`:""}
+ <div class="label">Case history</div>${timeline(S.events.filter(e=>e.cid===c.id))}</div>`}
+function doAccept(cid){acceptCase(cid);if(S.ui.cf==="un")S.ui.cf="mine";S.sel.case=cid;save();render();toast("You now own this case.")}
+function openCall(cid){const c=C(cid),p=P(c.pid);openModal(`<h3>📞 Phone call to ${esc(p.name)}</h3><p class="muted">${esc(p.phone)} · speaks ${p.lang==="ar"?"Arabic":"English"} · call attempt ${c.calls.length+1}. Record what happened.</p>
+ <div class="label">Patient answered: book the visit with ${STAFF[c.clinician].name}</div>${[1,2,4].map((o,i)=>`<button class="slot" id="callBook${i}" onclick="doCall('${cid}','Reached',${S.day+o})">${fmt(S.day+o)}</button>`).join("")}
+ <div class="label">Could not arrange a visit</div><button class="slot" id="callNo" onclick="doCall('${cid}','No answer')">No answer</button><button class="slot" onclick="doCall('${cid}','Wrong number')">Wrong number</button><button class="slot" onclick="doCall('${cid}','Patient declines')">Patient answered but declines follow-up</button>
+ <div style="text-align:right"><button class="link" onclick="closeModal();render()">Cancel</button></div>`,"call")}
+function doCall(cid,outcome,day){logCall(cid,outcome);if(outcome==="Reached")bookAppt(cid,day,"Phone");closeModal();save();render();
+ toast({Reached:"Visit booked for "+fmt(day||0)+".","No answer":"Call logged. The case stays open and is due again tomorrow.","Wrong number":"Number marked as not working. Next action: update contact details.","Patient declines":"Recorded. The doctor must authorise before this case can close."}[outcome])}
+function openClose(cid,keep){const c=C(cid),ok=closable(c),u=S.ui,first=Object.keys(OUTCOMES).find(k=>ok[k]===null);if(!keep){u.cl_out=first||"done";u.cl_notes=""}
+ const sel=u.cl_out,need=sel==="transferred"?null:ok[sel];
+ const chk=(b,t)=>`<div>${b?"✅":"⬜"} ${t}</div>`;
+ openModal(`<h3>Close case ${c.id}</h3><p class="muted">A case can close only when we know what happened to the patient. A message, a reply or a booking is not enough.</p>
+ <div class="box b-teal">${chk(c.appt&&c.appt.status==="Attended","Appointment attended")}${chk(!!c.outcome,"Doctor wrote the visit notes")}</div>
+ <div class="label">Outcome</div>${Object.entries(OUTCOMES).map(([k,l])=>`<label class="opt ${sel===k?"on":""}" onclick="U('cl_out','${k}');openClose('${cid}',1)"><input type="radio" ${sel===k?"checked":""}><div><b>${l}</b>${ok[k]?`<div class="small" style="color:var(--coral)">Not available: ${ok[k]}</div>`:""}</div></label>`).join("")}
+ <label class="fl">Notes</label><textarea id="clNotes" placeholder="${sel==="transferred"?"Required: which facility accepted the patient, who confirmed it, and when":"Optional"}" oninput="U('cl_notes',this.value)">${esc(u.cl_notes||"")}</textarea>
+ ${need?`<div class="box b-coral"><b>Not yet:</b> ${need}. The case stays open.</div>`:""}
+ <div class="row" style="margin-top:14px;justify-content:flex-end"><button onclick="closeModal();render()">Cancel</button><button class="pri" id="confirmClose" ${need?"disabled":""} onclick="doClose('${cid}')">Close case</button></div>`,"close")}
+function doClose(cid){const u=S.ui;if(u.cl_out==="transferred"&&(document.getElementById("clNotes").value||"").trim().length<15)return toast("Write the handover note first: which facility accepted the patient, who confirmed it, and when.");closeCase(cid,u.cl_out,(document.getElementById("clNotes").value||"").trim()||"Outcome verified by coordinator.");delete u.cl_out;delete u.cl_notes;closeModal();save();render();toast("Case closed with a documented outcome.")}
+
+/* ================= WhatsApp simulator ================= */
+function chatHtml(pid){const p=P(pid),ar=p.lang==="ar",M=S.msgs.filter(m=>m.pid===pid);let last=null;
+ return`<div class="chat">${M.map(m=>{let h="";if(m.day!==last){h=`<div class="daysep">${fmt(m.day)}</div>`;last=m.day}
+  return h+`<div class="bub ${m.dir==="in"?"in":""} ${ar?"rtl":""}">${esc(m.text)}${m.alt?`<span class="alt">EN: ${esc(m.alt)}</span>`:""}<span class="st ${m.status==="Failed"?"fail":""}">${m.dir==="out"?(m.status==="Failed"?"✗ Failed":m.status==="Responded"?"✓✓ Delivered · patient responded":"✓✓ "+m.status):"Patient · simulated"}</span></div>`}).join("")||`<div class="daysep">No messages yet</div>`}</div>`}
+function vWhatsApp(){const ids=[...new Set(S.cases.filter(c=>c.owner||S.msgs.some(m=>m.cid===c.id)).map(c=>c.pid))];let pid=S.sel.chat;if(!ids.includes(pid))pid=ids[0];
+ if(!pid)return`<div class="vh"><h2>WhatsApp</h2></div><div class="card empty">No conversations yet. Accept a follow-up case first.</div>`;
+ const p=P(pid),c=S.cases.filter(x=>x.pid===pid&&!x.closed&&x.owner).pop(),s=c&&cs(c),u=S.ui,can=S.role==="coord";
+ const tpl=u.tpl&&TPL[u.tpl]?u.tpl:(c&&c.firstMsgDay==null?"invite":"remind"),ar=p.lang==="ar",delivered=c&&S.msgs.some(m=>m.cid===c.id&&m.dir==="out"&&m.status!=="Failed");
+ return`<div class="vh"><h2>WhatsApp</h2><p class="muted">Patients need no app and no login. Messages never contain test results.</p></div>
+ <div class="box b-amber" style="margin:0 0 14px"><b>Simulator.</b> No real WhatsApp messages are sent. A real deployment needs patient consent, approved templates and the WhatsApp Business Platform.</div>
+ <div class="grid2"><div class="card">${ids.map(id=>{const x=P(id),xc=S.cases.filter(k=>k.pid===id).pop();return`<div class="item click ${id===pid?"sel":""}" onclick="S.sel.chat='${id}';render()"><div class="grow"><b>${esc(x.name)}</b><div class="small muted">${esc(x.phone)}</div></div><span class="chip c-${cs(xc).tone}">${cs(xc).status}</span></div>`}).join("")}</div>
+ <div class="card pad"><div class="spread"><div><b>${esc(p.name)}</b> <span class="muted small">· ${esc(p.phone)} ${p.badPhone?`<span class="chip c-coral">Number not working</span>`:"· verified at registration"} · ${ar?"Arabic":"English"}</span></div>${c?`<span class="chip c-${s.tone}">${s.status}</span>`:""}</div>
+ <div style="margin-top:10px">${chatHtml(pid)}</div>
+ ${c?`${s.act==="offer"?`<div class="box b-teal"><b>The patient asked to book.</b><div style="margin-top:8px"><button class="pri" id="offerBtn" ${can?"":"disabled"} onclick="offerTimes('${c.id}');save();render();toast('Appointment times sent (simulated).')">Offer appointment times</button></div></div>`:""}
+  ${s.act==="phone"||p.badPhone?`<div class="box b-coral"><b>${p.badPhone?"Messages are not reaching this number.":"The patient reported a new number."}</b> <button class="link" onclick="U('editPhone','${p.id}');U('newPhone','${c.reply==="phone"?"+971 50 555 0142":""}');go('patients',{patient:'${p.id}'})">Update the phone number</button> or <button class="link" onclick="openCall('${c.id}')">log a phone call</button>.</div>`:""}
+  <div class="label">Staff: send a message template</div><div class="row"><select onchange="U('tpl',this.value);render()">${Object.entries(TPL).map(([k,l])=>`<option value="${k}" ${k===tpl?"selected":""}>${l}</option>`).join("")}</select><button class="pri" id="sendTpl" ${can?"":"disabled"} onclick="sendMsg('${c.id}','${tpl}');save();render();toast(P('${pid}').badPhone?'Message failed. A recovery task was created.':'Message sent (simulated).')">Send on WhatsApp (simulated)</button></div>
+  <div class="box b-teal ${ar?"rtl":""}" style="white-space:pre-wrap"><span class="tiny muted" style="direction:ltr;display:block;text-align:left;font-family:Inter">Draft preview (${ar?"Arabic":"English"})</span>${esc(tplText(tpl,c,ar))}${ar?`<span class="tiny muted" style="direction:ltr;display:block;text-align:left;font-family:Inter;margin-top:6px">EN: ${esc(tplText(tpl,c,false))}</span>`:""}</div>
+  <div class="label">Demo control: play the patient's reply</div>${!delivered?`<span class="muted small">Send a message that is delivered first.</span>`:c.slots?`<div class="row">${c.slots.map((d,i)=>`<button id="sim-slot${i}" onclick="patientReply('${c.id}','slot',${i});save();render();toast('Patient chose a time. Appointment confirmed.')">${"ABC"[i]} · ${fmt(d)}</button>`).join("")}</div>`
+   :`<div class="row"><button id="sim-book" onclick="simReply('${c.id}','book')">1 · Book a visit</button><button onclick="simReply('${c.id}','human')">2 · Speak to coordinator</button><button onclick="simReply('${c.id}','phone')">“My number changed”</button><button onclick="simReply('${c.id}','decline')">“I don't want to come”</button></div>`}`
+ :`<p class="muted small">No open case with an owner for this patient.</p>`}</div></div>`}
+function simReply(cid,k){patientReply(cid,k);save();render();toast("Patient reply received (simulated). The case updated.")}
+
+/* ================= Appointments ================= */
+function vAppts(){const R=[];S.cases.forEach(c=>{c.apptHist.forEach(a=>R.push({c,a,old:true}));if(c.appt)R.push({c,a:c.appt})});R.sort((x,y)=>y.a.day-x.a.day);
+ const chip=a=>({Attended:"c-green",Missed:"c-coral",Cancelled:"c-coral"})[a.status]||"c-teal",can=S.role==="coord";
+ return`<div class="vh"><h2>Appointments</h2><p class="muted">Booked is not attended. Record what really happened on the day.</p></div>
+ <div class="card" style="overflow:auto"><table><thead><tr><th>Date</th><th>Patient</th><th>Doctor</th><th>Status</th><th>Action</th></tr></thead><tbody>${R.map(({c,a,old})=>{const dueNow=!old&&!c.closed&&["Booked","Confirmed","Reminder sent"].includes(a.status);
+  return`<tr><td><b>${fmt(a.day)}</b>${a.day===S.day&&dueNow?` <span class="chip c-amber">Today</span>`:a.day<S.day&&dueNow?` <span class="chip c-coral">Not recorded</span>`:""}</td><td>${esc(P(c.pid).name)}<div class="small muted">${c.id} · booked ${a.via==="WhatsApp"?"on WhatsApp":"by phone"}</div></td><td>${STAFF[c.clinician].name}</td><td><span class="chip ${chip(a)}">${a.status}</span></td>
+  <td>${dueNow&&a.day<=S.day?`<div class="row"><button class="pri" id="att-${c.id}" ${can?"":"disabled"} onclick="doAppt('${c.id}','Attended')">Attended</button><button class="warn" ${can?"":"disabled"} onclick="doAppt('${c.id}','Missed')">Missed</button></div>`:dueNow?`<button ${can?"":"disabled"} onclick="doAppt('${c.id}','Cancelled')">Cancel</button>`:""}</td></tr>`}).join("")||`<tr><td colspan="5" class="empty">No appointments yet.</td></tr>`}</tbody></table></div>`}
+function doAppt(cid,st){markAppt(cid,st);save();render();toast({Attended:"Attendance recorded. The doctor now documents the outcome.",Missed:"Marked as missed. The case stays open with a new task to rebook.",Cancelled:"Cancelled. The case stays open with a task to rebook."}[st])}
+
+/* ================= Reports ================= */
+function vReports(){const Cs=S.cases,pc=(a,b)=>b?Math.round(a*100/b)+"%":"n/a",first=c=>{const d=[...S.msgs.filter(m=>m.cid===c.id&&m.dir==="out").map(m=>m.day),...c.calls.map(k=>k.day)];return d.length?Math.min(...d):null};
+ const contacted=Cs.filter(c=>first(c)!=null),msgd=Cs.filter(c=>c.firstMsgDay!=null),resp=msgd.filter(c=>S.msgs.some(m=>m.cid===c.id&&m.dir==="in")),ap=[];Cs.forEach(c=>{c.apptHist.forEach(a=>ap.push(a));if(c.appt)ap.push(c.appt)});
+ const past=ap.filter(a=>["Attended","Missed"].includes(a.status)),refs=Cs.filter(c=>c.referral),lost=Cs.filter(c=>!c.closed&&c.calls.filter(k=>k.outcome==="No answer").length>=3);
+ const M=[["Registered patients",Object.keys(S.patients).length,"Unique patient records."],["Screening visits completed",`${S.episodes.filter(e=>epStatus(e)[0]==="Completed").length} of ${S.episodes.length}`,"Visits where every ordered test has been reviewed by a doctor ÷ all visits."],
+ ["Tests awaiting a result",S.tests.filter(t=>t.status!=="Sent to doctor").length,"Lab tests ordered but not yet released (includes rejected samples)."],["Results awaiting clinical review",S.tests.filter(t=>t.review&&t.review.status==="Waiting for doctor").length,"Released results that no doctor has reviewed yet."],
+ ["Follow-up cases created",Cs.length,"One case per doctor decision that needs follow-up."],["Overdue cases",Cs.filter(overdue).length,"Open cases whose next action is past its due date."],
+ ["Follow-up completion rate",pc(Cs.filter(c=>c.closed&&c.closed.outcome==="done").length,Cs.length),"Cases closed as “patient was seen and has a plan” ÷ all follow-up cases created."],
+ ["Time to first follow-up action",contacted.length?(contacted.reduce((s,c)=>s+first(c)-c.createdDay,0)/contacted.length).toFixed(1)+" days":"n/a",`Average days from case creation to the first message or call (${contacted.length} cases contacted).`],
+ ["Patient response rate",pc(resp.length,msgd.length),"Cases where the patient replied on WhatsApp ÷ cases with a delivered message."],["Appointment attendance rate",pc(past.filter(a=>a.status==="Attended").length,past.length),"Appointments attended ÷ appointments with a recorded result (attended or missed)."],
+ ["Referral completion rate",pc(refs.filter(c=>c.referral.ack).length,refs.length),"Referrals acknowledged by the receiving clinic ÷ referral cases."],["Lost-to-follow-up risk",pc(lost.length,Cs.length),"Open cases with 3 or more unanswered calls ÷ all cases. They stay open and visible."]];
+ return`<div class="vh"><h2>Reports</h2><p class="muted">Every number is counted live from the demo records and says exactly what it measures.</p></div>
+ <div class="box b-amber" style="margin:0 0 14px"><b>Synthetic demo data.</b> These numbers show how the measures work. They are not evidence that DigiHealth improves follow-up; that needs a real pilot.</div>
+ <div class="card" style="overflow:auto"><table><thead><tr><th>Measure</th><th>Value</th><th>What it counts</th></tr></thead><tbody>${M.map(([a,b,c])=>`<tr><td><b>${a}</b></td><td style="font-size:18px;font-weight:700;color:var(--teal);white-space:nowrap">${b}</td><td class="small muted">${c}</td></tr>`).join("")}</tbody></table></div>
+ <div class="label">Timeframes used in this demo (configurable, not clinical rules)</div><div class="card pad small">Automatic WhatsApp reminders on day ${CFG.remind.join(" and ")} without a reply · phone call due after ${CFG.window} days without a reply · failed call retried the next day · appointment reminder the day before.</div>`}
+
+document.getElementById("modalBg").addEventListener("click",e=>{if(e.target.id==="modalBg"){closeModal();render()}});
+S=load();if(!S)seed();render();
+</script>
+</body>
+</html>
