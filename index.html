@@ -204,9 +204,10 @@ function tplText(k,c,ar,x){const p=P(c.pid),d=STAFF[c.clinician],dn=ar?d.ar:d.na
  case"offer":return (ar?`شكراً لك. المواعيد المتاحة مع ${dn}:`:`Thank you. These times are available with ${dn}:`)+"\n"+x.slots.map((s,i)=>`${"ABC"[i]}) ${f(s)} · ${["09:30","16:15","10:45"][i]}`).join("\n")+"\n"+(ar?"أرسل A أو B أو C.":"Reply A, B or C.");
  case"confirm":return ar?`تم حجز زيارتك مع ${dn} يوم ${f(x.day)}. سنذكّرك قبل الموعد بيوم.`:`Your visit with ${dn} is booked for ${f(x.day)}. We will remind you the day before.`;
  case"apptRemind":return ar?`تذكير: زيارتك مع ${dn} غداً، ${f(x.day)}.`:`Reminder: your visit with ${dn} is tomorrow, ${f(x.day)}.`;
+ case"missed":return ar?`مرحباً ${p.first}، لاحظنا أنك لم تتمكن من حضور موعدك. هل تودّ المساعدة في ترتيب موعد آخر؟ أرسل 1 للحجز، أو 2 للتحدث مع المنسّقة.`:`Hello ${p.first}, we noticed you could not attend your appointment. Would you like help arranging another time? Reply 1 to book, or 2 to speak with our coordinator.`;
  case"contact":return ar?`مرحباً ${p.first}، تحاول ${cl} التواصل معك. يُرجى إرسال أفضل رقم هاتف للتواصل.`:`Hello ${p.first}, ${cl} is trying to reach you. Please reply with the best phone number to contact you.`;
  case"plan":return (ar?`شكراً لزيارتك. سجّل ${dn} خطة رعايتك.`:`Thank you for your visit. ${dn} has recorded your care plan.`)+(x.recheck!=null?(ar?` سنذكّرك بموعد الفحص القادم يوم ${f(x.recheck)}.`:` We will remind you about your next check on ${f(x.recheck)}.`):"")}}
-const TPL={invite:"Follow-up invitation",remind:"Reminder",contact:"Request to update contact details"};
+const TPL={invite:"Follow-up invitation",remind:"Reminder",missed:"After a missed visit",contact:"Request to update contact details"};
 function sendMsg(cid,tpl,x){const c=C(cid),p=P(c.pid),ar=p.lang==="ar",fail=p.badPhone;x=x||{};
  S.msgs.push({id:++S.n.m,pid:p.id,cid,day:S.day,dir:"out",tpl,text:tplText(tpl,c,ar,x),alt:ar?tplText(tpl,c,false,x):null,status:fail?"Failed":"Delivered (simulated)"});
  if(!fail&&c.firstMsgDay==null)c.firstMsgDay=S.day;
@@ -258,7 +259,7 @@ function cs(c){const p=P(c.pid),d=S.day,doc=STAFF[c.clinician].name,o=(status,to
  if(c.outcome)return o("Ready to close","green","Close the case","The patient was seen and the doctor wrote the notes.",c.outcome.day+1,"close");
  if(c.referral)return c.referral.ack?o("Ready to close","green","Close the case","The receiving clinic accepted the referral.",d,"close"):o("Waiting for referral","amber","Confirm the receiving clinic accepted the referral","A referral nobody acknowledged can be lost.",c.createdDay+3,"ack");
  const a=c.appt;
- if(a){if(a.status==="Attended")return o("Waiting for doctor's notes","amber",`${doc} documents the outcome`,"The patient came. The doctor still needs to write the visit notes.",a.day+1,null,doc);
+ if(a&&!(["Missed","Cancelled"].includes(a.status)&&(c.reply||c.slots))){if(a.status==="Attended")return o("Waiting for doctor's notes","amber",`${doc} documents the outcome`,"The patient came. The doctor still needs to write the visit notes.",a.day+1,null,doc);
   if(a.status==="Missed"||a.status==="Cancelled")return o(a.status==="Missed"?"Missed appointment":"Appointment cancelled","coral","Call the patient to rebook","The patient still needs care.",a.day+1,"call");
   if(a.day<=d)return o(a.day<d?"Visit not recorded":"Appointment today","amber","Record attended or missed","Booking is not the same as attending.",a.day,"attend");
   return o("Appointment booked","teal",`Visit on ${fmt(a.day)}`,"A reminder goes out the day before.",a.day,"wait")}
@@ -270,9 +271,11 @@ function cs(c){const p=P(c.pid),d=S.day,doc=STAFF[c.clinician].name,o=(status,to
  if(c.slots)return o("Waiting for patient reply","teal","Patient is choosing a time","",c.slotsDay+2,"wait");
  const last=c.calls[c.calls.length-1];
  if(last&&last.outcome==="No answer")return o("Cannot reach patient","coral","Call again",`${c.calls.length} call attempt${c.calls.length>1?"s":""} without answer.`,last.day+1,"call");
+ const urg=c.urgency==="Urgent",win=urg?1:CFG.window;
+ if(urg&&!c.calls.length)return o("Urgent: call today","coral","Call the patient today","The doctor marked this urgent. Urgent cases do not wait for message reminders.",c.createdDay,"call");
  if(c.firstMsgDay==null)return o("Not contacted yet","amber",p.channel==="WhatsApp"?"Send the follow-up invitation":"Call the patient","The patient has not been contacted yet.",c.createdDay+1,p.channel==="WhatsApp"?"send":"call");
  const k=d-c.firstMsgDay;
- if(k>=CFG.window)return o("No response","coral","Call the patient",`No reply after ${CFG.window} days and ${c.reminders.length} reminder${c.reminders.length===1?"":"s"}.`,c.firstMsgDay+CFG.window,"call");
+ if(k>=win)return o("No response","coral","Call the patient",`No reply after ${win} day${win>1?"s":""} and ${c.reminders.length} reminder${c.reminders.length===1?"":"s"}.`,c.firstMsgDay+win,"call");
  return o("Waiting for patient reply","teal",`Automatic reminders on day ${CFG.remind.join(" and ")}; call on ${fmt(c.firstMsgDay+CFG.window)}`,"A sent message is not proof the patient acted.",c.firstMsgDay+CFG.window,"wait")}
 const overdue=c=>{const s=cs(c);return !c.closed&&s.due!=null&&s.due<S.day};
 /* every open item becomes a task with an owner, a reason and a due date */
@@ -286,10 +289,10 @@ function tasks(){const L=[],add=(role,pid,what,why,due,tone,nav)=>L.push({role,p
  S.cases.forEach(c=>{if(c.closed)return;const s=cs(c);
   if(s.status==="Waiting for doctor's notes")add(c.clinician,c.pid,"Write the visit notes",s.why,s.due,"amber",{view:"review",review:"c:"+c.id});
   else if(s.status==="Waiting for doctor's approval")add(c.clinician,c.pid,"Authorise or reject ‘patient declined’",s.why,s.due,"amber",{view:"review",review:"d:"+c.id});
-  else if(s.act&&s.act!=="wait")add("coord",c.pid,s.next,s.why,s.due,s.tone,{view:"cases",case:c.id})});
- return L.sort((a,b)=>({coral:0,amber:1,green:2,teal:3})[a.tone]-({coral:0,amber:1,green:2,teal:3})[b.tone]||a.due-b.due)}
+  else if(s.act&&s.act!=="wait"){add("coord",c.pid,s.next,s.why,s.due,s.tone,{view:"cases",case:c.id});L[L.length-1].urg=c.urgency==="Urgent"?1:0}});
+ return L.sort((a,b)=>(b.urg|0)-(a.urg|0)||({coral:0,amber:1,green:2,teal:3})[a.tone]-({coral:0,amber:1,green:2,teal:3})[b.tone]||a.due-b.due)}
 function advance(n){for(let i=0;i<n;i++){S.day++;S.cases.forEach(c=>{if(c.closed||!c.owner)return;const p=P(c.pid);
-   if(c.firstMsgDay!=null&&!c.appt&&!c.reply&&!c.slots&&!c.decline&&!p.badPhone){const k=S.day-c.firstMsgDay;if(CFG.remind.includes(k)&&!c.reminders.includes(k)){c.reminders.push(k);sendMsg(c.id,"remind",{auto:true})}
+   if(c.firstMsgDay!=null&&!c.appt&&!c.reply&&!c.slots&&!c.decline&&!p.badPhone){const k=S.day-c.firstMsgDay;if(c.urgency==="Urgent")return;if(CFG.remind.includes(k)&&!c.reminders.includes(k)){c.reminders.push(k);sendMsg(c.id,"remind",{auto:true})}
     if(k===CFG.window)ev(cref(c),`No reply after ${CFG.window} days. Case flagged for a phone call.`,"coral","DigiHealth")}
    if(c.appt&&["Booked","Confirmed"].includes(c.appt.status)&&c.appt.day===S.day+1&&p.channel==="WhatsApp"&&!p.badPhone){sendMsg(c.id,"apptRemind",{day:c.appt.day,auto:true});c.appt.status="Reminder sent"}})}
  save();render();toast("Date is now "+fmt(S.day))}
@@ -384,7 +387,7 @@ function closeModal(){MODAL=null;document.getElementById("modalBg").classList.re
 function welcome(){const how=[["A result comes in","The lab sends it to the right doctor."],["The doctor decides","If a visit is needed, the patient goes on the follow-up list."],["The patient gets a WhatsApp","No app, no login. Reminders are automatic. No reply? The coordinator calls."],["Closed only after the visit","Not when a message is sent. Only when the patient was seen."]];
  const team=[["nurse","registers the patient"],["lab","enters the test result"],["omar","decides what is needed"],["coord","contacts the patient"],["mgr","sees who is still waiting"]];
  return`<div class="hero"><div class="logo" style="font-size:22px"><div class="dot">✚</div>DigiHealth</div>
- <h1>No patient gets lost after a health screening.</h1>
+ <h1>Getting a screening result should be the start of getting care.</h1>
  <p class="lead">Today, a worrying test result can sit in a system while nobody is sure who should call the patient. DigiHealth is one shared to-do list for the clinic: it follows each patient from test result to doctor's visit and always shows who acts next.</p>
  <div class="row" style="margin-top:24px"><button class="pri" id="startBtn" style="font-size:18px;padding:14px 26px" onclick="S.started=true;save();render()">Start the guided demo →</button><button onclick="S.started=true;setExplore(true)">Look around on my own</button></div>
  <p class="small muted" style="margin-top:10px">About 4 minutes · no login · fictional patients · WhatsApp is simulated, nothing is sent</p>
@@ -547,14 +550,15 @@ function caseDetail(c){const p=P(c.pid),s=cs(c),t=T(c.tid),can=S.role==="coord";
  const P1={accept:["Accept ownership",`doAccept('${c.id}')`],send:["Open WhatsApp to send the invitation",`go('whatsapp',{chat:'${p.id}'})`],offer:["Open WhatsApp to offer times",`go('whatsapp',{chat:'${p.id}'})`],call:[s.next,`openCall('${c.id}')`],
   phone:["Update the phone number",`U('editPhone','${p.id}');U('newPhone','${c.reply==="phone"?"+971 50 555 0142":""}');go('patients',{patient:'${p.id}'})`],attend:["Go to Appointments to record attendance",`go('appts')`],close:["Close the case",`openClose('${c.id}')`],ack:["Receiving clinic has accepted the referral",`ackReferral('${c.id}');save();render()`]}[s.act];
  return`<div class="card pad"><div class="spread"><div>${pline(p)}<div class="small muted">Case ${c.id} · from screening visit ${c.eid} · test ${c.tid}</div></div><span class="chip c-${s.tone}">${s.status}</span></div>
- ${!c.closed?`<div class="box b-${s.tone==="teal"?"teal":s.tone}"><div class="kv"><div>Status</div><div><b>${s.status}</b>${s.why?". "+esc(s.why):""}</div><div>What to do next</div><div><b>${esc(s.next)}</b></div><div>Who</div><div>${esc(s.owner)}</div><div>By when</div><div>${dueTxt(s.due)}</div></div>
+ ${!c.closed?`<div class="box b-${s.tone==="teal"?"teal":s.tone}"><div class="kv"><div>Status</div><div><b>${s.status}</b>${s.why?". "+esc(s.why):""}</div><div>What to do next</div><div><b>${esc(s.next)}</b></div><div>Follow-up owner</div><div>${esc(s.owner)}</div><div>By when</div><div>${dueTxt(s.due)}</div></div>
   ${P1?`<div style="margin-top:12px"><button class="pri" id="primary" ${can?"":"disabled"} onclick="${P1[1]}">${P1[0]}</button>${can?"":` <span class="small muted">Only the coordinator can do this.</span>`}</div>`:""}</div>`
  :`<div class="box b-green"><b>Closed ${fmt(c.closed.day)} by ${esc(c.closed.by)}</b><br>${OUTCOMES[c.closed.outcome]}${c.closed.notes?"<br><span class='small'>"+esc(c.closed.notes)+"</span>":""}</div>`}
- <div class="kv" style="margin-top:14px"><div>Why</div><div>${esc(c.reason)}</div><div>Doctor</div><div>${STAFF[c.clinician].name} · how soon: <b>${c.urgency}</b></div><div>Created</div><div>${fmt(c.createdDay)}</div>
+ <div class="kv" style="margin-top:14px"><div>Why</div><div>${esc(c.reason)}</div><div>Clinical decision</div><div>${STAFF[c.clinician].name}: ${DECISIONS[c.decision]} · how soon: <b>${c.urgency}</b></div><div>Created</div><div>${fmt(c.createdDay)}</div>
   <div>Contact</div><div>${esc(p.phone)} ${p.badPhone?`<span class="chip c-coral">Not working</span>`:""} · ${S.msgs.filter(m=>m.cid===c.id).length} WhatsApp messages · ${c.calls.length} phone calls</div>
   <div>Appointment</div><div>${c.appt?`${fmt(c.appt.day)} · <b>${c.appt.status}</b>`:"Not scheduled"}${c.apptHist.map(a=>`<div class="small muted">Earlier: ${fmt(a.day)} · ${a.status}</div>`).join("")}</div>
   <div>Doctor's notes</div><div>${c.outcome?`${esc(c.outcome.summary)} Plan: ${c.outcome.plan.map(k=>PLANS[k]).join("; ")||"none"} (${esc(c.outcome.by)}, ${fmt(c.outcome.day)})`:"Not documented yet"}</div></div>
  ${!c.closed&&can?`<div class="row" style="margin-top:14px"><button onclick="go('whatsapp',{chat:'${p.id}'})">💬 Open WhatsApp</button>${c.owner?`<button onclick="openCall('${c.id}')">📞 Log a phone call</button>`:""}${s.act!=="close"?`<button onclick="openClose('${c.id}')">Close case…</button>`:""}</div>`:""}
+ ${!c.closed?`<div class="label">What this case needs before it can close</div><div class="box b-teal small" style="margin-top:0">${c.appt&&c.appt.status==="Attended"?"✅":"⬜"} The patient was seen &nbsp; ${c.outcome?"✅":"⬜"} The doctor wrote the visit notes<br><span class="muted">Or a doctor-approved reason: the patient said no, another clinic accepted the referral, or the patient moved with a handover note. A message, a reply, a booking or a call attempt never closes a case.</span></div>`:""}
  <div class="label">Case history</div>${timeline(S.events.filter(e=>e.cid===c.id))}</div>`}
 function doAccept(cid){acceptCase(cid);if(S.ui.cf==="un")S.ui.cf="mine";S.sel.case=cid;save();render();toast("You now own this case.")}
 function openCall(cid){const c=C(cid),p=P(c.pid);openModal(`<h3>📞 Phone call to ${esc(p.name)}</h3><p class="muted">${esc(p.phone)} · speaks ${p.lang==="ar"?"Arabic":"English"} · call attempt ${c.calls.length+1}. Record what happened.</p>
@@ -581,7 +585,7 @@ function chatHtml(pid){const p=P(pid),ar=p.lang==="ar",M=S.msgs.filter(m=>m.pid=
 function vWhatsApp(){const ids=[...new Set(S.cases.filter(c=>c.owner||S.msgs.some(m=>m.cid===c.id)).map(c=>c.pid))];let pid=S.sel.chat;if(!ids.includes(pid))pid=ids[0];
  if(!pid)return`<div class="vh"><h2>WhatsApp</h2></div><div class="card empty">No conversations yet. Accept a follow-up case first.</div>`;
  const p=P(pid),c=S.cases.filter(x=>x.pid===pid&&!x.closed&&x.owner).pop(),s=c&&cs(c),u=S.ui,can=S.role==="coord";
- const tpl=u.tpl&&TPL[u.tpl]?u.tpl:(c&&c.firstMsgDay==null?"invite":"remind"),ar=p.lang==="ar",delivered=c&&S.msgs.some(m=>m.cid===c.id&&m.dir==="out"&&m.status!=="Failed");
+ const tpl=u.tpl&&TPL[u.tpl]?u.tpl:(c&&c.firstMsgDay==null?"invite":c&&c.appt&&c.appt.status==="Missed"?"missed":"remind"),ar=p.lang==="ar",delivered=c&&S.msgs.some(m=>m.cid===c.id&&m.dir==="out"&&m.status!=="Failed");
  return`<div class="vh"><h2>WhatsApp</h2><p class="muted">Patients need no app and no login. Messages never contain test results.</p></div>
  <div class="box b-amber" style="margin:0 0 14px"><b>Simulator.</b> No real WhatsApp messages are sent. A real deployment needs patient consent, approved templates and the WhatsApp Business Platform.</div>
  <div class="grid2"><div class="card">${ids.map(id=>{const x=P(id),xc=S.cases.filter(k=>k.pid===id).pop();return`<div class="item click ${id===pid?"sel":""}" onclick="S.sel.chat='${id}';render()"><div class="grow"><b>${esc(x.name)}</b><div class="small muted">${esc(x.phone)}</div></div><span class="chip c-${cs(xc).tone}">${cs(xc).status}</span></div>`}).join("")}</div>
@@ -611,6 +615,8 @@ function vReports(){const Cs=S.cases,pc=(a,b)=>b?Math.round(a*100/b)+"%":"n/a",f
  const past=ap.filter(a=>["Attended","Missed"].includes(a.status)),refs=Cs.filter(c=>c.referral),lost=Cs.filter(c=>!c.closed&&c.calls.filter(k=>k.outcome==="No answer").length>=3);
  const M=[["Registered patients",Object.keys(S.patients).length,"Unique patient records."],["Screening visits completed",`${S.episodes.filter(e=>epStatus(e)[0]==="Completed").length} of ${S.episodes.length}`,"Visits where every ordered test has been reviewed by a doctor ÷ all visits."],
  ["Tests awaiting a result",S.tests.filter(t=>t.status!=="Sent to doctor").length,"Lab tests ordered but not yet released (includes rejected samples)."],["Results awaiting clinical review",S.tests.filter(t=>t.review&&t.review.status==="Waiting for doctor").length,"Released results that no doctor has reviewed yet."],
+ ["Out-of-range results with a doctor's review and a next step",(()=>{const o=S.tests.filter(t=>t.value!=null&&!TESTS[t.test].inRef(t.value)),k=o.filter(t=>t.review&&t.review.status==="Reviewed"&&(t.review.decision==="nfa"||S.cases.some(c=>c.tid===t.id&&c.owner)));return pc(k.length,o.length)+` (${k.length} of ${o.length})`})(),"Results outside the demo reference range that a doctor has reviewed and that either need no follow-up or have a follow-up case with an owner ÷ all results outside that range."],
+ ["Cases with no owner",Cs.filter(c=>!c.closed&&!c.owner).length,"Each case is given to the coordinator when it is opened, so this should stay 0."],
  ["Follow-up cases created",Cs.length,"One case per doctor decision that needs follow-up."],["Overdue cases",Cs.filter(overdue).length,"Open cases whose next action is past its due date."],
  ["Follow-up completion rate",pc(Cs.filter(c=>c.closed&&c.closed.outcome==="done").length,Cs.length),"Cases closed as “patient was seen and has a plan” ÷ all follow-up cases created."],
  ["Time to first follow-up action",contacted.length?(contacted.reduce((s,c)=>s+first(c)-c.createdDay,0)/contacted.length).toFixed(1)+" days":"n/a",`Average days from case creation to the first message or call (${contacted.length} cases contacted).`],
@@ -619,7 +625,7 @@ function vReports(){const Cs=S.cases,pc=(a,b)=>b?Math.round(a*100/b)+"%":"n/a",f
  return`<div class="vh"><h2>Reports</h2><p class="muted">Every number is counted live from the demo records and says exactly what it measures.</p></div>
  <div class="box b-amber" style="margin:0 0 14px"><b>Synthetic demo data.</b> These numbers show how the measures work. They are not evidence that DigiHealth improves follow-up; that needs a real pilot.</div>
  <div class="card" style="overflow:auto"><table><thead><tr><th>Measure</th><th>Value</th><th>What it counts</th></tr></thead><tbody>${M.map(([a,b,c])=>`<tr><td><b>${a}</b></td><td style="font-size:18px;font-weight:700;color:var(--teal);white-space:nowrap">${b}</td><td class="small muted">${c}</td></tr>`).join("")}</tbody></table></div>
- <div class="label">Timeframes used in this demo (configurable, not clinical rules)</div><div class="card pad small">Automatic WhatsApp reminders on day ${CFG.remind.join(" and ")} without a reply · phone call due after ${CFG.window} days without a reply · failed call retried the next day · appointment reminder the day before.</div>`}
+ <div class="label">Timeframes used in this demo (configurable, not clinical rules)</div><div class="card pad small">Automatic WhatsApp reminders on day ${CFG.remind.join(" and ")} without a reply · phone call due after ${CFG.window} days without a reply · failed call retried the next day · appointment reminder the day before · urgent cases: call the same day, no waiting for reminders. This is an example schedule; a real clinic would set it with its doctors for each level of urgency.</div>`}
 
 document.getElementById("modalBg").addEventListener("click",e=>{if(e.target.id==="modalBg"){closeModal();render()}});
 S=load();if(!S)seed();render();

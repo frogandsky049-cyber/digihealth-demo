@@ -1,6 +1,6 @@
 # DigiHealth demo
 
-Competition prototype. Closing the gap between screening and care.
+Competition prototype. Getting a screening result should be the start of getting care.
 
 All patients are fictional. WhatsApp is simulated: no real messages are sent.
 
